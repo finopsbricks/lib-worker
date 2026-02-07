@@ -9,7 +9,7 @@ Guidance for Claude Code when working with this package.
 - **Worker polling loop** - Polls orchestrator for tasks, dispatches to handlers
 - **Orchestrator integration** - Attaching documents and reports to work records
 - **API clients** - Txn app and passthrough API wrappers
-- **Utilities** - Balance calculation functions for verify_statement steps
+- **Template rendering** - EJS-based template rendering for supporting documents
 
 ## Package Structure
 
@@ -23,7 +23,7 @@ src/
 │   ├── txn.js            # Txn app API client
 │   └── passthrough.js    # External API passthrough client
 └── utils/
-    └── balance-calculator.js  # Financial utilities
+    └── template-renderer.js  # EJS template rendering
 ```
 
 ## Usage

@@ -22,7 +22,6 @@ import ejs from 'ejs';
 import { readFile } from 'fs/promises';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { formatAmount } from './balance-calculator.js';
 
 // Module state - set once at worker startup
 let workerTemplatesDir = null;
@@ -33,10 +32,11 @@ const templateCache = new Map();
 
 /**
  * Shared helpers available to all templates
+ *
+ * Note: formatAmount was removed - workers should pass their own
+ * formatting function as data if needed.
  */
 const helpers = {
-  formatAmount,
-
   formatDate: (date, style = 'short') => {
     if (!date) return 'N/A';
     const d = typeof date === 'string' ? new Date(date) : date;
