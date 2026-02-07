@@ -1,5 +1,5 @@
 {
-  "name": "@fob/worker-core",
+  "name": "@fob/lib-worker",
   "version": "0.1.0",
   "description": "Shared worker infrastructure for process engine workers",
   "type": "module",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:finopsbricks/worker-core.git"
+    "url": "git@github.com:finopsbricks/lib-worker.git"
   },
   "keywords": [
     "worker",
@@ -24,5 +24,8 @@
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "ejs": "^4.0.1"
   }
 }

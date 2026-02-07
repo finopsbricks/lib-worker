@@ -1,11 +1,11 @@
-# @fob/worker-core
+# @fob/lib-worker
 
 Shared worker infrastructure for process engine workers.
 
 ## Installation
 
 ```bash
-npm install github:finopsbricks/worker-core
+npm install github:finopsbricks/lib-worker
 ```
 
 Or in `package.json`:
@@ -13,7 +13,7 @@ Or in `package.json`:
 ```json
 {
   "dependencies": {
-    "@fob/worker-core": "github:finopsbricks/worker-core"
+    "@fob/lib-worker": "github:finopsbricks/lib-worker"
   }
 }
 ```
@@ -24,7 +24,7 @@ Or in `package.json`:
 
 ```javascript
 import 'dotenv/config';
-import { startWorker } from '@fob/worker-core';
+import { startWorker } from '@fob/lib-worker';
 import { getHandler } from './steps/index.js';
 
 startWorker({ getHandler });
@@ -33,7 +33,7 @@ startWorker({ getHandler });
 ### Step Implementation
 
 ```javascript
-import { txn, attachDocument } from '@fob/worker-core';
+import { txn, attachDocument } from '@fob/lib-worker';
 
 export default async function fetchData(task) {
   const { item, context, step_order } = task;
@@ -57,7 +57,7 @@ export default async function fetchData(task) {
 For workers that need external API access (Zoho Books, QuickBooks, etc.):
 
 ```javascript
-import { startWorker } from '@fob/worker-core';
+import { startWorker } from '@fob/lib-worker';
 import { getHandler } from './steps/index.js';
 
 // Require passthrough env vars
@@ -68,7 +68,7 @@ startWorker({
 ```
 
 ```javascript
-import { passthrough } from '@fob/worker-core';
+import { passthrough } from '@fob/lib-worker';
 
 const invoices = await passthrough.passthroughGet(
   'zohobooks_connector_id',

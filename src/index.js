@@ -22,6 +22,13 @@ export {
   compareBalances,
   findPeriodOpeningBalance,
   findPeriodClosingBalance,
+} from './utils/balance-calculator.js';
+
+// Report generators (template-based, async)
+export {
   generateBalanceReport,
   generateComparisonReport,
-} from './utils/balance-calculator.js';
+} from './utils/report-generators.js';
+
+// Template rendering
+export { renderTemplate } from './utils/template-renderer.js';

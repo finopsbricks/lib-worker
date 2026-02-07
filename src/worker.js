@@ -5,6 +5,7 @@
  */
 
 import { validateEnv } from './validate-env.js';
+import { initTemplates } from './utils/template-renderer.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -126,10 +127,16 @@ async function executeTask(task, getHandler) {
  * Start the worker polling loop
  * @param {object} options
  * @param {function} options.getHandler - Function to resolve step_type to handler
+ * @param {string} options.callerUrl - import.meta.url from the worker's entry point (for template resolution)
  * @param {object} options.validateOptions - Options for validateEnv
  */
-export async function startWorker({ getHandler, validateOptions = {} }) {
+export async function startWorker({ getHandler, callerUrl, validateOptions = {} }) {
   validateEnv(validateOptions);
+
+  // Initialize templates directory for renderTemplate()
+  if (callerUrl) {
+    initTemplates(callerUrl);
+  }
 
   const orchestratorUrl = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
   const workerType = process.env.WORKER_TYPE || 'customer';

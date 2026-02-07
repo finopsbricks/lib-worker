@@ -4,7 +4,7 @@ Guidance for Claude Code when working with this package.
 
 ## Overview
 
-`@fob/worker-core` is a shared infrastructure package for process engine workers. It provides:
+`@fob/lib-worker` is a shared infrastructure package for process engine workers. It provides:
 
 - **Worker polling loop** - Polls orchestrator for tasks, dispatches to handlers
 - **Orchestrator integration** - Attaching documents and reports to work records
@@ -32,7 +32,7 @@ Worker repos consume this package:
 
 ```javascript
 import 'dotenv/config';
-import { startWorker } from '@fob/worker-core';
+import { startWorker } from '@fob/lib-worker';
 import { getHandler } from './steps/index.js';
 
 startWorker({ getHandler });
@@ -41,7 +41,7 @@ startWorker({ getHandler });
 Step implementations import utilities:
 
 ```javascript
-import { txn, attachDocument } from '@fob/worker-core';
+import { txn, attachDocument } from '@fob/lib-worker';
 
 export default async function fetchData(task) {
   const statement = await txn.getStatement(task.item.id);
