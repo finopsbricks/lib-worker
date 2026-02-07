@@ -64,7 +64,25 @@ See `.env.example` for all variables and defaults.
 2. **Fail fast** - Missing required env vars cause immediate exit
 3. **Defaults in .env.example** - Not in code
 
-## Related
+## Standards Reference
 
-- [accounting-process-standards](https://github.com/cashflowy/accounting-process-standards) - Standards for worker implementation
-- [engineering-standards](https://github.com/alex/engineering-standards) - General coding standards
+This project follows standards documented in separate repositories.
+
+### Accounting Process Standards (Primary)
+
+Standards specific to building AI-powered accounting processes, step design, and system integration.
+
+**Location**: `~/ec2code/finopsbricks/accounting-process-standards`
+
+Key topics:
+- **Principles**: `deterministic-before-llm.md`, `audit-trail-first.md`, `structured-checks.md`, `step-independence.md`
+- **Architecture**: `system-layers.md`, `orchestrator-integration.md`, `system-of-record-integration.md`
+- **Steps**: `step-handler-pattern.md`, `step-output-contract.md`, `document-attachment.md`, `check-structure.md`
+- **Processes**: `process-phases.md`, `verification-workflow.md`, `step-sequencing.md`
+- **Naming**: `step-types.md`, `check-naming.md`, `variables-and-functions.md`
+
+### General Engineering Standards
+
+General web development standards (JavaScript, testing, git workflow).
+
+**Location**: `~/ec2code/alex/engineering-standards`
