@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.3.0] - 2026-02-16
+
+### Changed
+- Renamed `step_type` to `slug` in task handling (breaking change for task interface)
+- Updated `getHandler` to receive `slug` instead of `step_type`
+
+### Added
+- JSDoc `@typedef` for `Task` object in main exports
+
 ## [0.2.0] - 2026-02-07
 
 ### Added
