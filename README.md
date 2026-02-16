@@ -36,16 +36,15 @@ startWorker({ getHandler });
 import { txn, attachDocument } from '@fob/lib-worker';
 
 export default async function fetchData(task) {
-  const { item, context, step_order } = task;
-  const { work_record_id } = context;
+  const { step, work_record } = task;
 
-  const statement = await txn.getStatement(item.id);
+  const statement = await txn.getStatement(work_record.item_snapshot.id);
 
   await attachDocument(
-    work_record_id,
+    work_record.id,
     'Statement Data',
     JSON.stringify(statement, null, 2),
-    step_order
+    step.slug
   );
 
   return { statement };
@@ -86,7 +85,7 @@ const invoices = await passthrough.passthroughGet(
 
 ### Orchestrator
 
-- `attachDocument(work_record_id, title, content, step_order)` - Attach supporting document
+- `attachDocument(work_record_id, title, content, step_slug)` - Attach supporting document
 - `attachReport(work_record_id, content)` - Attach final report
 - `clearTemp(work_record_id)` - Clear temp files (skipped in dev mode)
 

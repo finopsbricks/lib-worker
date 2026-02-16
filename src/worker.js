@@ -42,10 +42,10 @@ async function pollForTask() {
 
 /**
  * Report task completion to orchestrator
- * @param {string} task_id
+ * @param {string} step_queue_id
  * @param {object} output
  */
-async function reportComplete(task_id, output) {
+async function reportComplete(step_queue_id, output) {
   const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
 
   try {
@@ -55,7 +55,7 @@ async function reportComplete(task_id, output) {
         Authorization: `Bearer ${process.env.WORKER_SECRET}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ task_id, output }),
+      body: JSON.stringify({ step_queue_id, output }),
     });
 
     if (!response.ok) {
@@ -69,11 +69,11 @@ async function reportComplete(task_id, output) {
 
 /**
  * Report task failure to orchestrator
- * @param {string} task_id
+ * @param {string} step_queue_id
  * @param {string} error
  * @param {boolean} retryable
  */
-async function reportFailed(task_id, error, retryable = true) {
+async function reportFailed(step_queue_id, error, retryable = true) {
   const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
 
   try {
@@ -83,7 +83,7 @@ async function reportFailed(task_id, error, retryable = true) {
         Authorization: `Bearer ${process.env.WORKER_SECRET}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ task_id, error, retryable }),
+      body: JSON.stringify({ step_queue_id, error, retryable }),
     });
 
     if (!response.ok) {
@@ -101,25 +101,25 @@ async function reportFailed(task_id, error, retryable = true) {
  * @param {function} getHandler
  */
 async function executeTask(task, getHandler) {
-  const { id, slug, step_order } = task;
+  const { step_queue_id, step } = task;
 
-  console.log(`[Worker] Executing task ${id}: step ${step_order} (${slug})`);
+  console.log(`[Worker] Executing ${step_queue_id}: ${step.slug}`);
 
-  const handler = getHandler(slug);
+  const handler = getHandler(step.slug);
 
   if (!handler) {
-    console.error(`[Worker] No handler for slug: ${slug}`);
-    await reportFailed(id, `Unknown slug: ${slug}`, false);
+    console.error(`[Worker] No handler for slug: ${step.slug}`);
+    await reportFailed(step_queue_id, `Unknown slug: ${step.slug}`, false);
     return;
   }
 
   try {
     const output = await handler(task);
-    console.log(`[Worker] Task ${id} completed successfully`);
-    await reportComplete(id, output);
+    console.log(`[Worker] Task ${step_queue_id} completed successfully`);
+    await reportComplete(step_queue_id, output);
   } catch (error) {
-    console.error(`[Worker] Task ${id} failed:`, error.message);
-    await reportFailed(id, error.message, true);
+    console.error(`[Worker] Task ${step_queue_id} failed:`, error.message);
+    await reportFailed(step_queue_id, error.message, true);
   }
 }
 

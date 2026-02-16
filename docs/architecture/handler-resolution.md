@@ -1,16 +1,16 @@
 # Handler Resolution
 
-The `getHandler` function maps step types to handler functions. Provided by the consuming worker repo.
+The `getHandler` function maps step slugs to handler functions. Provided by the consuming worker repo.
 
 ```javascript
 // src/steps/index.js in worker repo
-export function getHandler(step_type) {
+export function getHandler(slug) {
   const handlers = {
-    'fetch_statement': fetchStatement,
-    'verify_statement': verifyStatement,
-    'reconcile': reconcile,
+    'alex/fetch_statement': fetchStatement,
+    'alex/verify_statement': verifyStatement,
+    'alex/reconcile': reconcile,
   };
-  return handlers[step_type] || null;
+  return handlers[slug] || null;
 }
 ```
 
@@ -18,7 +18,9 @@ export function getHandler(step_type) {
 
 ```javascript
 async function handler(task) {
-  // task contains: id, step_type, step_order, work_record_id, item, context
+  // task contains: step_queue_id, step, work_record, org_id
+  // step contains: slug, config
+  // work_record contains: id, item_snapshot, step_outputs
   // ... do work ...
   return { result: 'data' };  // becomes task output
 }

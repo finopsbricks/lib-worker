@@ -9,13 +9,27 @@ await attachDocument(
   work_record_id,  // Target work record
   title,           // Document title (e.g., 'Balance Check')
   content,         // Markdown content
-  step_order       // For file naming
+  step_slug        // Step slug for file naming (e.g., 'alex/verify_data')
 );
+```
+
+## Usage in Step Handler
+
+```javascript
+export default async function verifyData(task) {
+  const { step, work_record } = task;
+
+  // ... do verification ...
+
+  await attachDocument(work_record.id, 'Verification Results', content, step.slug);
+
+  return { verified: true };
+}
 ```
 
 ## Behavior
 
-1. Writes locally to `temp/{work_record_id}/{step_order}_{title}.md`
+1. Writes locally to `temp/{work_record_id}/{step_slug}_{title}.md`
 2. POSTs to `/api/worker/attach-document`
 3. Returns boolean success status
 
@@ -23,7 +37,7 @@ await attachDocument(
 
 Title is sanitized: spaces become underscores, special chars removed.
 
-Example: `temp/wr_123/2_Balance_Check.md`
+Example: `temp/wr_123/alex_verify_data_Balance_Check.md`
 
 ## Related Notes
 

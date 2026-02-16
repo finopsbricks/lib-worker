@@ -4,12 +4,17 @@ Tasks received from the orchestrator contain:
 
 ```javascript
 {
-  id: 'task_123',
-  step_type: 'verify_statement',
-  step_order: 2,
-  work_record_id: 'wr_456',
-  item: { id: 'stmt_789', ... },
-  context: { account_id: 'acc_012', ... }
+  step_queue_id: 'sq_123',
+  step: {
+    slug: 'alex/verify_statement',
+    config: { /* step config from process definition */ },
+  },
+  work_record: {
+    id: 'wr_456',
+    item_snapshot: { id: 'stmt_789', ... },
+    step_outputs: { 'alex/fetch_data': { ... } },
+  },
+  org_id: 'org_123',
 }
 ```
 
@@ -17,12 +22,13 @@ Tasks received from the orchestrator contain:
 
 | Field | Purpose |
 |-------|---------|
-| `id` | Task identifier for reporting completion |
-| `step_type` | Maps to handler function |
-| `step_order` | Sequence number for document naming |
-| `work_record_id` | Target for document attachments |
-| `item` | Primary entity being processed |
-| `context` | Additional data from previous steps |
+| `step_queue_id` | StepQueue ID for reporting completion |
+| `step.slug` | Step slug, maps to handler function (e.g., 'alex/verify_statement') |
+| `step.config` | Step configuration from process definition |
+| `work_record.id` | Work record ID for document attachments |
+| `work_record.item_snapshot` | Primary entity being processed |
+| `work_record.step_outputs` | Outputs from previous steps, keyed by slug |
+| `org_id` | Organization ID |
 
 ## Related Notes
 

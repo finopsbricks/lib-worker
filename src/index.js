@@ -8,12 +8,15 @@
  * Task received from the orchestrator for step execution.
  *
  * @typedef {object} Task
- * @property {string} id - Task identifier for reporting completion
- * @property {string} step_type - Maps to handler function (e.g., 'alex/fetch_data')
- * @property {number} step_order - Sequence number for document naming
- * @property {string} work_record_id - Target for document attachments
- * @property {object} item - Primary entity being processed
- * @property {object} context - Additional data from previous steps (includes work_record_id)
+ * @property {string} step_queue_id - StepQueue ID for reporting completion
+ * @property {object} step - Step definition
+ * @property {string} step.slug - Step slug, maps to handler function (e.g., 'alex/fetch_data')
+ * @property {object} step.config - Step configuration from process definition
+ * @property {object} work_record - Work record context
+ * @property {string} work_record.id - Work record ID for document attachments
+ * @property {object} work_record.item_snapshot - Primary entity being processed
+ * @property {Object<string, object>} work_record.step_outputs - Outputs from previous steps keyed by slug
+ * @property {string} org_id - Organization ID
  */
 
 // Core worker

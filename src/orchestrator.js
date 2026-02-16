@@ -52,14 +52,14 @@ export function clearTemp(work_record_id) {
  * @param {string} work_record_id
  * @param {string} title
  * @param {string} content
- * @param {number} step_order
+ * @param {string} step_slug
  */
-export async function attachDocument(work_record_id, title, content, step_order) {
+export async function attachDocument(work_record_id, title, content, step_slug) {
   const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
 
   // Write to local temp
   const safeTitle = title.replace(/[^a-zA-Z0-9-_]/g, '_');
-  writeToLocalTemp(work_record_id, `${step_order}_${safeTitle}.md`, content);
+  writeToLocalTemp(work_record_id, `${step_slug}_${safeTitle}.md`, content);
 
   try {
     const response = await fetch(`${url}/api/worker/attach-document`, {
@@ -72,7 +72,7 @@ export async function attachDocument(work_record_id, title, content, step_order)
         work_record_id,
         title,
         content,
-        step_order,
+        step_slug,
       }),
     });
 

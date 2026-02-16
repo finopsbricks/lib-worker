@@ -44,8 +44,9 @@ Step implementations import utilities:
 import { txn, attachDocument } from '@fob/lib-worker';
 
 export default async function fetchData(task) {
-  const statement = await txn.getStatement(task.item.id);
-  await attachDocument(work_record_id, 'Data', content, step_order);
+  const { step, work_record } = task;
+  const statement = await txn.getStatement(work_record.item_snapshot.id);
+  await attachDocument(work_record.id, 'Data', content, step.slug);
   return { statement };
 }
 ```
