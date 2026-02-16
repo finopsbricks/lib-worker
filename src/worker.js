@@ -101,15 +101,15 @@ async function reportFailed(task_id, error, retryable = true) {
  * @param {function} getHandler
  */
 async function executeTask(task, getHandler) {
-  const { id, step_type, step_order } = task;
+  const { id, slug, step_order } = task;
 
-  console.log(`[Worker] Executing task ${id}: step ${step_order} (${step_type})`);
+  console.log(`[Worker] Executing task ${id}: step ${step_order} (${slug})`);
 
-  const handler = getHandler(step_type);
+  const handler = getHandler(slug);
 
   if (!handler) {
-    console.error(`[Worker] No handler for step type: ${step_type}`);
-    await reportFailed(id, `Unknown step type: ${step_type}`, false);
+    console.error(`[Worker] No handler for slug: ${slug}`);
+    await reportFailed(id, `Unknown slug: ${slug}`, false);
     return;
   }
 
@@ -126,7 +126,7 @@ async function executeTask(task, getHandler) {
 /**
  * Start the worker polling loop
  * @param {object} options
- * @param {function} options.getHandler - Function to resolve step_type to handler
+ * @param {function} options.getHandler - Function to resolve slug to handler
  * @param {string} options.callerUrl - import.meta.url from the worker's entry point (for template resolution)
  * @param {object} options.validateOptions - Options for validateEnv
  */
