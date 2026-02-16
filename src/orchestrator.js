@@ -57,10 +57,10 @@ export function clearTemp(work_record_id) {
 export async function attachDocument(work_record_id, title, content, step_slug) {
   const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
 
-  // Write to local temp (sanitize step_slug to avoid subdirectories)
-  const safeSlug = step_slug.replace(/\//g, '_');
+  // Write to local temp (use step name only, drop org prefix)
+  const stepName = step_slug.includes('/') ? step_slug.split('/').pop() : step_slug;
   const safeTitle = title.replace(/[^a-zA-Z0-9-_]/g, '_');
-  writeToLocalTemp(work_record_id, `${safeSlug}_${safeTitle}.md`, content);
+  writeToLocalTemp(work_record_id, `${stepName}_${safeTitle}.md`, content);
 
   try {
     const response = await fetch(`${url}/api/worker/attach-document`, {
