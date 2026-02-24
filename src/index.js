@@ -35,3 +35,6 @@ export * as passthrough from './apps/passthrough.js';
 
 // Template rendering
 export { renderTemplate, initTemplates } from './utils/template-renderer.js';
+
+// Config resolution
+export { resolveConfig } from './utils/config-resolver.js';

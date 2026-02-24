@@ -1,5 +1,7 @@
 // @ts-check
 
+import { resolveConfig } from './utils/config-resolver.js';
+
 /**
  * @fileoverview
  * Declarative step definition factory.
@@ -101,11 +103,18 @@ export function createHandler(definition) {
   return async function handler(task) {
     const { step, work_record, step_queue_id, org_id } = task;
     const raw_config = step.config || {};
+    const step_outputs = work_record?.step_outputs || {};
+
+    // --- Template resolution ---
+    // Resolves {{env.VAR}} and {{step/slug.field}} before validation
+    console.log(`[${slug}] Raw config:`, JSON.stringify(raw_config));
+    const resolved_config = resolveConfig(raw_config, step_outputs);
+    console.log(`[${slug}] Resolved config:`, JSON.stringify(resolved_config));
 
     // --- Input validation ---
-    let config = raw_config;
+    let config = resolved_config;
     if (inputSchema) {
-      const result = inputSchema.safeParse(raw_config);
+      const result = inputSchema.safeParse(resolved_config);
       if (!result.success) {
         const errors = result.error.issues
           .map((i) => `  - ${i.path.join('.')}: ${i.message}`)
