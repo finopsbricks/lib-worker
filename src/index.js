@@ -23,6 +23,9 @@
 export { startWorker } from './worker.js';
 export { validateEnv } from './validate-env.js';
 
+// Step definition
+export { defineStep, isStepDefinition, getStepHandler } from './define-step.js';
+
 // Orchestrator integration
 export { attachDocument, attachReport, clearTemp } from './orchestrator.js';
 
@@ -31,4 +34,4 @@ export * as txn from './apps/txn.js';
 export * as passthrough from './apps/passthrough.js';
 
 // Template rendering
-export { renderTemplate } from './utils/template-renderer.js';
+export { renderTemplate, initTemplates } from './utils/template-renderer.js';

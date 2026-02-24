@@ -11,6 +11,16 @@ Guidance for Claude Code when working with this package.
 - **API clients** - Txn app and passthrough API wrappers
 - **Template rendering** - EJS-based template rendering for supporting documents
 
+### Related Repositories
+
+This package is part of the **FinOpsBricks** monorepo (`/Users/alex/ec2code/finopsbricks/`):
+
+- **`apps/orchestrator.finopsbricks.com`** — Process orchestrator. Defines processes, dispatches tasks to workers, stores work records. Workers poll this for tasks.
+- **`apps/txn.finopsbricks.com`** — System of record. Stores statements, accounts, transactions. Workers call this API to read/write data.
+- **`workers/*`** — Customer-specific workers that consume this package. Each implements org-specific step handlers.
+- **`cli/`** — Developer CLI (`fob`) for debugging steps locally in worker repos.
+- **`accounting-process-standards/`** — Documentation for step design patterns and process architecture.
+
 ## Package Structure
 
 ```
