@@ -24,7 +24,7 @@ export { startWorker } from './worker.js';
 export { validateEnv } from './validate-env.js';
 
 // Step definition
-export { defineStep, isStepDefinition, getStepHandler } from './define-step.js';
+export { defineStep, isStepDefinition, getStepHandler, createHandler } from './define-step.js';
 
 // Orchestrator integration
 export { attachDocument, attachReport, clearTemp } from './orchestrator.js';
