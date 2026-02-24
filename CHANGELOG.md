@@ -15,6 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.4.0] - 2026-02-24
+
+### Added
+- `defineStep()` factory function for declarative step definitions with Zod schema validation
+- `isStepDefinition()` helper to check if a value is a step definition
+- `createHandler()` function that wraps step definitions with automatic input/output validation
+- `getStepHandler()` function for registry lookup with step definition enforcement
+- New dependencies: `zod` and `zod-to-json-schema` for schema validation
+
+### Fixed
+- Temp filename handling in `attachDocument` - sanitized step slugs to avoid subdirectory issues and simplified filenames to just use the title
+
+### Changed
+- Updated architecture documentation for task structure, handler resolution, and document attachment
+
 ## [0.3.0] - 2026-02-16
 
 ### Changed
