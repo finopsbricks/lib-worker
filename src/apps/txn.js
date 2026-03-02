@@ -173,6 +173,30 @@ export async function updateChecks(data) {
 }
 
 // =============================================================================
+// Rules endpoints
+// =============================================================================
+
+export async function createRule(data) {
+  return apiPost('/rules', data);
+}
+
+export async function getRule(id) {
+  return apiGet(`/rules/${id}`);
+}
+
+export async function getRules(params = {}) {
+  return apiGet('/rules', params);
+}
+
+export async function updateRule(id, data) {
+  return apiPut(`/rules/${id}`, data);
+}
+
+export async function runRule(id, options = {}) {
+  return apiPost(`/rules/${id}/run`, options);
+}
+
+// =============================================================================
 // Export base functions for custom calls
 // =============================================================================
 

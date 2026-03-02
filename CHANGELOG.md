@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.6.0] - 2026-03-02
+
+### Added
+- Rules API endpoints in txn client: `createRule`, `getRule`, `getRules`, `updateRule`, `runRule`
+
+### Changed
+- Migrated worker authentication from shared secret to per-org API keys
+- Replaced `WORKER_SECRET` env var with `ORCHESTRATOR_API_KEY` and `ORCHESTRATOR_API_SECRET`
+- Replaced `WORKER_ORG` env var with `STEP_PREFIX`
+- Auth headers changed from `Authorization: Bearer` to `api-key`/`api-secret` headers
+- Worker poll header changed from `X-Worker-Org` to `X-Step-Prefix`
+
 ## [0.5.0] - 2026-03-02
 
 ### Added
