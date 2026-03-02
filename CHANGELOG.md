@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.5.0] - 2026-03-02
+
+### Added
+- `resolveConfig()` utility for resolving template variables in step configs — supports `{{env.VAR_NAME}}` for environment variables and `{{step_slug.field.path}}` for previous step outputs
+- Exported `resolveConfig` from main package index
+
+### Changed
+- `createHandler()` now automatically resolves config templates before input validation using `resolveConfig`
+
 ## [0.4.1] - 2026-02-24
 
 ### Added
