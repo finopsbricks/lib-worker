@@ -12,8 +12,9 @@
  */
 export function validateEnv(options = {}) {
   const required = [
-    'WORKER_SECRET',
-    'WORKER_ORG',
+    'ORCHESTRATOR_API_KEY',
+    'ORCHESTRATOR_API_SECRET',
+    'STEP_PREFIX',
     'FOB_TXN_API_URL',
     'FOB_TXN_API_KEY',
     'FOB_TXN_API_SECRET',
@@ -38,6 +39,6 @@ export function validateEnv(options = {}) {
 
   console.log('[Worker] Environment validated');
   console.log('[Worker] Orchestrator:', process.env.ORCHESTRATOR_URL || 'http://localhost:3000');
-  console.log('[Worker] Org:', process.env.WORKER_ORG);
+  console.log('[Worker] Step prefix:', process.env.STEP_PREFIX);
   console.log('[Worker] Type:', process.env.WORKER_TYPE || 'customer');
 }

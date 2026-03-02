@@ -65,7 +65,8 @@ export async function attachDocument(work_record_id, title, content, step_slug) 
     const response = await fetch(`${url}/api/worker/attach-document`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.WORKER_SECRET}`,
+        'api-key': process.env.ORCHESTRATOR_API_KEY,
+        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -105,7 +106,8 @@ export async function attachReport(work_record_id, content) {
     const response = await fetch(`${url}/api/worker/attach-report`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.WORKER_SECRET}`,
+        'api-key': process.env.ORCHESTRATOR_API_KEY,
+        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

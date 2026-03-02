@@ -20,9 +20,10 @@ async function pollForTask() {
     const response = await fetch(`${url}/api/worker/poll`, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${process.env.WORKER_SECRET}`,
+        'api-key': process.env.ORCHESTRATOR_API_KEY,
+        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
         'X-Worker-Type': process.env.WORKER_TYPE || 'customer',
-        'X-Worker-Org': process.env.WORKER_ORG,
+        'X-Step-Prefix': process.env.STEP_PREFIX,
       },
     });
 
@@ -52,7 +53,8 @@ async function reportComplete(step_queue_id, output) {
     const response = await fetch(`${url}/api/worker/complete`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.WORKER_SECRET}`,
+        'api-key': process.env.ORCHESTRATOR_API_KEY,
+        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ step_queue_id, output }),
@@ -80,7 +82,8 @@ async function reportFailed(step_queue_id, error, retryable = true) {
     const response = await fetch(`${url}/api/worker/failed`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.WORKER_SECRET}`,
+        'api-key': process.env.ORCHESTRATOR_API_KEY,
+        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ step_queue_id, error, retryable }),
@@ -146,7 +149,7 @@ export async function startWorker({ getHandler, callerUrl, validateOptions = {} 
   console.log('[Worker] Starting customer worker...');
   console.log('[Worker] Orchestrator:', orchestratorUrl);
   console.log('[Worker] Type:', workerType);
-  console.log('[Worker] Org:', process.env.WORKER_ORG);
+  console.log('[Worker] Step prefix:', process.env.STEP_PREFIX);
   console.log('[Worker] Poll interval:', pollInterval, 'ms');
   console.log('================================================');
 
