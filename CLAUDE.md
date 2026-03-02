@@ -69,6 +69,16 @@ Required vars are validated at startup by `validateEnv()`.
 
 See `.env.example` for all variables and defaults.
 
+## Releasing
+
+After running `/release` and the version is updated, always prompt the user to run:
+
+```
+/bump-dependents
+```
+
+This updates `package.json` and `package-lock.json` in all dependent repos under `/Users/alex/ec2code/finopsbricks/` to the new version, then commits and pushes each one.
+
 ## Key Principles
 
 1. **No config object** - Use `process.env` directly throughout

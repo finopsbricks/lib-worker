@@ -10,7 +10,8 @@
       "Bash(git push:*)",
       "Bash(while read hash msg)",
       "Bash(do echo \"=== $msg ===\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(npm install:*)"
     ]
   }
 }
