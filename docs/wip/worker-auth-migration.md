@@ -97,7 +97,7 @@ These are two different representations of the same org and serve different purp
 - [x] `executeProcess.js`: rename variable and field reference
 - [x] `poll/route.js`: update SQL `AND step_prefix = :step_prefix`
 - [x] `work-queue/route.js`: rename field in `StepQueue.create`
-- [ ] **MANUAL**: Run DB migration
+- [x] **MANUAL**: Run DB migration
 
 ```sql
 ALTER TABLE step_queue RENAME COLUMN worker_org TO step_prefix;
@@ -136,6 +136,6 @@ ALTER TABLE step_queue RENAME COLUMN worker_org TO step_prefix;
 ## Deployment Checklist
 
 - [ ] Deploy orchestrator
-- [ ] Run DB migration: `ALTER TABLE step_queue RENAME COLUMN worker_org TO step_prefix;`
+- [x] Run DB migration: `ALTER TABLE step_queue RENAME COLUMN worker_org TO step_prefix;`
 - [ ] Restart workers (pick up new lib-worker headers)
 - [ ] Verify tasks are being claimed (check `claimed_at` is no longer NULL)
