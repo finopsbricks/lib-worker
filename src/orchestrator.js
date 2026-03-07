@@ -12,6 +12,9 @@ import path from 'path';
 
 const isDev = process.env.NODE_ENV === 'development';
 
+/** Local work record IDs (from `fob steps run`) should skip remote calls. */
+const isLocalRun = (work_record_id) => work_record_id.startsWith('local-');
+
 /**
  * Write content to local temp folder.
  * Written in all environments (needed by CLI-based LLM steps).
@@ -55,11 +58,13 @@ export function clearTemp(work_record_id) {
  * @param {string} step_slug
  */
 export async function attachDocument(work_record_id, title, content, step_slug) {
-  const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
-
   // Write to local temp (just use title as filename)
   const safeTitle = title.replace(/[^a-zA-Z0-9-_]/g, '_');
   writeToLocalTemp(work_record_id, `${safeTitle}.md`, content);
+
+  if (isLocalRun(work_record_id)) return true;
+
+  const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
 
   try {
     const response = await fetch(`${url}/api/worker/attach-document`, {
@@ -97,10 +102,12 @@ export async function attachDocument(work_record_id, title, content, step_slug) 
  * @param {string} content - Markdown content
  */
 export async function attachReport(work_record_id, content) {
-  const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
-
   // Write to local temp
   writeToLocalTemp(work_record_id, 'report.md', content);
+
+  if (isLocalRun(work_record_id)) return true;
+
+  const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
 
   try {
     const response = await fetch(`${url}/api/worker/attach-report`, {
