@@ -15,9 +15,6 @@ export function validateEnv(options = {}) {
     'ORCHESTRATOR_API_KEY',
     'ORCHESTRATOR_API_SECRET',
     'STEP_PREFIX',
-    'FOB_TXN_API_URL',
-    'FOB_TXN_API_KEY',
-    'FOB_TXN_API_SECRET',
   ];
 
   if (options.requirePassthrough) {
