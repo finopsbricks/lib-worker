@@ -97,10 +97,77 @@ export async function attachDocument(work_record_id, title, content, step_slug) 
 }
 
 /**
- * Attach the final report to a work record
+ * Attach a binary file to a work record
  * @param {string} work_record_id
- * @param {string} content - Markdown content
+ * @param {string} title - Display title
+ * @param {string} filepath - Path to the file on disk
+ * @param {string} step_slug
  */
+export async function attachFile(work_record_id, title, filepath, step_slug) {
+  // Copy to local temp (always, for dev inspection)
+  try {
+    const dir = path.join('temp', work_record_id);
+    fs.mkdirSync(dir, { recursive: true });
+    const dest = path.join(dir, path.basename(filepath));
+    fs.copyFileSync(filepath, dest);
+    console.log(`[Orchestrator] Copied ${filepath} → ${dest}`);
+  } catch (err) {
+    console.error('[Orchestrator] Failed to copy file to temp:', err.message);
+  }
+
+  if (isLocalRun(work_record_id)) return true;
+
+  const MIME_MAP = {
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    '.xls': 'application/vnd.ms-excel',
+    '.pdf': 'application/pdf',
+    '.csv': 'text/csv',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+  };
+
+  const ext = path.extname(filepath).toLowerCase();
+  const mime_type = MIME_MAP[ext] || 'application/octet-stream';
+  const filename = path.basename(filepath);
+
+  const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
+
+  try {
+    const file_buffer = fs.readFileSync(filepath);
+    const content_base64 = file_buffer.toString('base64');
+
+    const response = await fetch(`${url}/api/worker/attach-file`, {
+      method: 'POST',
+      headers: {
+        'api-key': process.env.ORCHESTRATOR_API_KEY,
+        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        work_record_id,
+        title,
+        step_slug,
+        filename,
+        mime_type,
+        content_base64,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('[Orchestrator] attach-file failed:', response.status, error);
+      return false;
+    }
+
+    console.log(`[Orchestrator] File attached: "${title}" (${filename})`);
+    return true;
+  } catch (error) {
+    console.error('[Orchestrator] attach-file error:', error.message);
+    return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Internal HTTP helpers (reuse auth from env)
 // ---------------------------------------------------------------------------

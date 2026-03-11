@@ -29,6 +29,7 @@ export { defineStep, isStepDefinition, getStepHandler, createHandler } from './d
 // Orchestrator integration
 export {
   attachDocument,
+  attachFile,
   attachReport,
   clearTemp,
   findItemByExternalId,
