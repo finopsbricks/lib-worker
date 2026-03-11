@@ -101,6 +101,123 @@ export async function attachDocument(work_record_id, title, content, step_slug) 
  * @param {string} work_record_id
  * @param {string} content - Markdown content
  */
+// ---------------------------------------------------------------------------
+// Internal HTTP helpers (reuse auth from env)
+// ---------------------------------------------------------------------------
+
+async function orchestratorGet(urlPath) {
+  const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
+  const res = await fetch(`${url}${urlPath}`, {
+    headers: {
+      'api-key': process.env.ORCHESTRATOR_API_KEY,
+      'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`GET ${urlPath}: ${res.status} — ${text}`);
+  }
+  return res.json();
+}
+
+async function orchestratorPost(urlPath, body) {
+  const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
+  const res = await fetch(`${url}${urlPath}`, {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.ORCHESTRATOR_API_KEY,
+      'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`POST ${urlPath}: ${res.status} — ${text}`);
+  }
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Item management
+// ---------------------------------------------------------------------------
+
+/**
+ * Find an item by external_id.
+ * Returns the item object or null if not found.
+ *
+ * @param {string} external_id
+ * @returns {Promise<Object|null>}
+ */
+export async function findItemByExternalId(external_id) {
+  const result = await orchestratorGet(
+    `/api/v1/items?external_id=${encodeURIComponent(external_id)}`
+  );
+  const items = result.data || [];
+  return items.length > 0 ? items[0] : null;
+}
+
+/**
+ * Create a new item.
+ *
+ * @param {Object} params
+ * @param {string} params.type - Item type (e.g., 'msa_file')
+ * @param {string} params.name - Display name
+ * @param {string} params.external_id - External ID for deduplication
+ * @param {Object} [params.metadata] - Arbitrary metadata
+ * @returns {Promise<Object>} Created item
+ */
+export async function createItem({ type, name, external_id, metadata }) {
+  const result = await orchestratorPost('/api/v1/items', {
+    type,
+    name,
+    external_id,
+    metadata: metadata || {},
+  });
+  return result.data || result;
+}
+
+/**
+ * Find an existing item by external_id, or create a new one.
+ *
+ * @param {Object} params
+ * @param {string} params.type
+ * @param {string} params.name
+ * @param {string} params.external_id
+ * @param {Object} [params.metadata]
+ * @returns {Promise<{item: Object, created: boolean}>}
+ */
+export async function findOrCreateItem({ type, name, external_id, metadata }) {
+  const existing = await findItemByExternalId(external_id);
+  if (existing) {
+    return { item: existing, created: false };
+  }
+  const item = await createItem({ type, name, external_id, metadata });
+  return { item, created: true };
+}
+
+// ---------------------------------------------------------------------------
+// Process management
+// ---------------------------------------------------------------------------
+
+/**
+ * Run a process. Creates a work record and queues execution.
+ *
+ * @param {string} process_id - Process ID
+ * @param {Object} [options]
+ * @param {string} [options.item_id] - Item ID (required for item-scoped processes)
+ * @returns {Promise<{status: string, work_record_id: string, job_id: string}>}
+ */
+export async function runProcess(process_id, { item_id } = {}) {
+  const body = item_id ? { item_id } : {};
+  const result = await orchestratorPost(`/api/v1/processes/${process_id}/run`, body);
+  return result.data || result;
+}
+
+// ---------------------------------------------------------------------------
+// Reports
+// ---------------------------------------------------------------------------
+
 export async function attachReport(work_record_id, content) {
   // Write to local temp
   writeToLocalTemp(work_record_id, 'report.md', content);

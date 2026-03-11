@@ -27,7 +27,15 @@ export { validateEnv } from './validate-env.js';
 export { defineStep, isStepDefinition, getStepHandler, createHandler } from './define-step.js';
 
 // Orchestrator integration
-export { attachDocument, attachReport, clearTemp } from './orchestrator.js';
+export {
+  attachDocument,
+  attachReport,
+  clearTemp,
+  findItemByExternalId,
+  createItem,
+  findOrCreateItem,
+  runProcess,
+} from './orchestrator.js';
 
 // API clients
 export * as txn from './apps/txn.js';
@@ -38,3 +46,6 @@ export { renderTemplate, initTemplates } from './utils/template-renderer.js';
 
 // Config resolution
 export { resolveConfig } from './utils/config-resolver.js';
+
+// Email
+export { sendEmail, sendEmailToMultiple } from './utils/email.js';
