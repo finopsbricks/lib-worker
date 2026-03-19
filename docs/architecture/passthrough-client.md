@@ -27,5 +27,5 @@ Requests route to:
 
 ## Related Notes
 
-- [txn-client.md](/docs/architecture/txn-client.md)
+- [statements-client.md](/docs/architecture/statements-client.md)
 - [environment-variables.md](/docs/architecture/environment-variables.md)

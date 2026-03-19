@@ -8,7 +8,7 @@ Guidance for Claude Code when working with this package.
 
 - **Worker polling loop** - Polls orchestrator for tasks, dispatches to handlers
 - **Orchestrator integration** - Attaching documents and reports to work records
-- **API clients** - Txn app and passthrough API wrappers
+- **API clients** - Statements app and passthrough API wrappers
 - **Template rendering** - EJS-based template rendering for supporting documents
 
 ### Related Repositories
@@ -16,7 +16,7 @@ Guidance for Claude Code when working with this package.
 This package is part of the **FinOpsBricks** monorepo (`/Users/alex/ec2code/finopsbricks/`):
 
 - **`apps/orchestrator.finopsbricks.com`** — Process orchestrator. Defines processes, dispatches tasks to workers, stores work records. Workers poll this for tasks.
-- **`apps/txn.finopsbricks.com`** — System of record. Stores statements, accounts, transactions. Workers call this API to read/write data.
+- **`apps/statements.finopsbricks.com`** — System of record. Stores statements, accounts, transactions. Workers call this API to read/write data.
 - **`workers/*`** — Customer-specific workers that consume this package. Each implements org-specific step handlers.
 - **`cli/`** — Developer CLI (`fob`) for debugging steps locally in worker repos.
 - **`accounting-process-standards/`** — Documentation for step design patterns and process architecture.
@@ -30,7 +30,7 @@ src/
 ├── validate-env.js       # Environment validation
 ├── orchestrator.js       # attachDocument, attachReport, clearTemp
 ├── apps/
-│   ├── txn.js            # Txn app API client
+│   ├── statements.js     # Statements app API client
 │   └── passthrough.js    # External API passthrough client
 └── utils/
     └── template-renderer.js  # EJS template rendering
@@ -51,11 +51,11 @@ startWorker({ getHandler });
 Step implementations import utilities:
 
 ```javascript
-import { txn, attachDocument } from '@fob/lib-worker';
+import { statements, attachDocument } from '@fob/lib-worker';
 
 export default async function fetchData(task) {
   const { step, work_record } = task;
-  const statement = await txn.getStatement(work_record.item_snapshot.id);
+  const statement = await statements.getStatement(work_record.item_snapshot.id);
   await attachDocument(work_record.id, 'Data', content, step.slug);
   return { statement };
 }

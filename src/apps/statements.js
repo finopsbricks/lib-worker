@@ -1,24 +1,24 @@
 /**
- * txn.fobrix.com API Client
+ * statements.finopsbricks.com API Client
  *
- * Wrapper for calling the transactions app API endpoints.
+ * Wrapper for calling the statements app API endpoints.
  * Uses process.env directly for credentials.
  */
 
 const getHeaders = () => ({
-  'api-key': process.env.FOB_TXN_API_KEY,
-  'api-secret': process.env.FOB_TXN_API_SECRET,
+  'api-key': process.env.FOB_STATEMENTS_API_KEY,
+  'api-secret': process.env.FOB_STATEMENTS_API_SECRET,
   'Content-Type': 'application/json',
 });
 
 /**
- * GET request to txn API
+ * GET request to statements API
  * @param {string} endpoint - API endpoint (e.g., '/statements/123')
  * @param {object} params - Query parameters
  * @returns {Promise<object>}
  */
 async function apiGet(endpoint, params = {}) {
-  const url = new URL(`${process.env.FOB_TXN_API_URL}${endpoint}`);
+  const url = new URL(`${process.env.FOB_STATEMENTS_API_URL}${endpoint}`);
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       url.searchParams.append(key, value);
@@ -39,13 +39,13 @@ async function apiGet(endpoint, params = {}) {
 }
 
 /**
- * POST request to txn API
+ * POST request to statements API
  * @param {string} endpoint - API endpoint
  * @param {object} body - Request body
  * @returns {Promise<object>}
  */
 async function apiPost(endpoint, body = {}) {
-  const url = `${process.env.FOB_TXN_API_URL}${endpoint}`;
+  const url = `${process.env.FOB_STATEMENTS_API_URL}${endpoint}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -62,13 +62,13 @@ async function apiPost(endpoint, body = {}) {
 }
 
 /**
- * PATCH request to txn API
+ * PATCH request to statements API
  * @param {string} endpoint - API endpoint
  * @param {object} body - Request body
  * @returns {Promise<object>}
  */
 async function apiPatch(endpoint, body = {}) {
-  const url = `${process.env.FOB_TXN_API_URL}${endpoint}`;
+  const url = `${process.env.FOB_STATEMENTS_API_URL}${endpoint}`;
 
   const response = await fetch(url, {
     method: 'PATCH',
@@ -85,13 +85,13 @@ async function apiPatch(endpoint, body = {}) {
 }
 
 /**
- * PUT request to txn API
+ * PUT request to statements API
  * @param {string} endpoint - API endpoint
  * @param {object} body - Request body
  * @returns {Promise<object>}
  */
 async function apiPut(endpoint, body = {}) {
-  const url = `${process.env.FOB_TXN_API_URL}${endpoint}`;
+  const url = `${process.env.FOB_STATEMENTS_API_URL}${endpoint}`;
 
   const response = await fetch(url, {
     method: 'PUT',

@@ -33,12 +33,12 @@ startWorker({ getHandler });
 ### Step Implementation
 
 ```javascript
-import { txn, attachDocument } from '@fob/lib-worker';
+import { statements, attachDocument } from '@fob/lib-worker';
 
 export default async function fetchData(task) {
   const { step, work_record } = task;
 
-  const statement = await txn.getStatement(work_record.item_snapshot.id);
+  const statement = await statements.getStatement(work_record.item_snapshot.id);
 
   await attachDocument(
     work_record.id,
@@ -91,7 +91,7 @@ const invoices = await passthrough.passthroughGet(
 
 ### API Clients
 
-- `txn` - Txn app API client
+- `statements` - Statements app API client
   - `getStatement(id)`
   - `updateStatement(id, updates)`
   - `getAccount(id)`
@@ -128,9 +128,9 @@ Copy `.env.example` to `.env` and fill in values.
 
 - `WORKER_SECRET` - Authentication secret for orchestrator
 - `WORKER_ORG` - Organization identifier
-- `FOB_TXN_API_URL` - Txn app API URL
-- `FOB_TXN_API_KEY` - Txn app API key
-- `FOB_TXN_API_SECRET` - Txn app API secret
+- `FOB_STATEMENTS_API_URL` - Statements app API URL
+- `FOB_STATEMENTS_API_KEY` - Statements app API key
+- `FOB_STATEMENTS_API_SECRET` - Statements app API secret
 
 ### Optional
 

@@ -79,8 +79,8 @@ All architecture docs follow the "minimum words for specificity" principle with 
 | docs/architecture/attach-document.md | Yes (3 links) | Good |
 | docs/architecture/attach-report.md | Yes (2 links) | Good |
 | docs/architecture/temp-file-storage.md | Yes (2 links) | Good |
-| docs/architecture/txn-client.md | Yes (2 links) | Good |
-| docs/architecture/txn-auto-pagination.md | Yes (1 link) | Could add more |
+| docs/architecture/statements-client.md | Yes (2 links) | Good |
+| docs/architecture/statements-auto-pagination.md | Yes (1 link) | Could add more |
 | docs/architecture/passthrough-client.md | Yes (2 links) | Good |
 | docs/architecture/two-layer-templates.md | Yes (2 links) | Good |
 | docs/architecture/template-helpers.md | Yes (2 links) | Good |
@@ -90,7 +90,7 @@ All architecture docs follow the "minimum words for specificity" principle with 
 
 **Files needing more cross-links:**
 
-1. **txn-auto-pagination.md** - Only links to txn-client.md. Should also link to task-structure.md (since getAllTransactions is typically used in handlers).
+1. **statements-auto-pagination.md** - Only links to statements-client.md. Should also link to task-structure.md (since getAllTransactions is typically used in handlers).
 
 2. **compare-balances.md** - Only links to calculate-daily-balances.md. Should also link to template-helpers.md (formatting results) and attach-document.md (attaching comparison reports).
 
@@ -109,8 +109,8 @@ All titles are clear and specific:
 | attach-document.md | attachDocument | Specific - names function |
 | attach-report.md | attachReport | Specific - names function |
 | temp-file-storage.md | Temp File Storage | Clear concept |
-| txn-client.md | Txn Client | Clear concept |
-| txn-auto-pagination.md | Txn Auto-Pagination | Clear feature |
+| statements-client.md | Statements Client | Clear concept |
+| statements-auto-pagination.md | Statements Auto-Pagination | Clear feature |
 | passthrough-client.md | Passthrough Client | Clear concept |
 | two-layer-templates.md | Two-Layer Templates | Descriptive pattern name |
 | template-helpers.md | Template Helpers | Clear concept |
@@ -126,7 +126,7 @@ All titles follow the naming convention: `topic-or-function-name.md` with hyphen
 1. **Delete `docs/architecture/package-overview.md`** - Content duplicates README.md. The README is the appropriate place for package overview.
 
 ### Priority 2: Improve Cross-Links
-1. **txn-auto-pagination.md** - Add link to `task-structure.md`
+1. **statements-auto-pagination.md** - Add link to `task-structure.md`
 2. **compare-balances.md** - Add links to `template-helpers.md` and `attach-document.md`
 
 ### Optional: Consider Consolidation

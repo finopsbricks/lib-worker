@@ -6,7 +6,7 @@
 
 - **Worker polling loop** - Polls orchestrator for tasks, dispatches to handlers
 - **Orchestrator integration** - Attaching documents and reports to work records
-- **API clients** - Txn app and passthrough API wrappers
+- **API clients** - Statements app and passthrough API wrappers
 - **Template system** - EJS-based markdown document generation
 - **Utilities** - Balance calculation and report generation
 
@@ -23,4 +23,4 @@ startWorker({ getHandler, callerUrl: import.meta.url });
 
 - [start-worker.md](/docs/architecture/start-worker.md)
 - [environment-variables.md](/docs/architecture/environment-variables.md)
-- [txn-client.md](/docs/architecture/txn-client.md)
+- [statements-client.md](/docs/architecture/statements-client.md)

@@ -39,7 +39,7 @@ export {
 } from './orchestrator.js';
 
 // API clients
-export * as txn from './apps/txn.js';
+export * as statements from './apps/statements.js';
 export * as passthrough from './apps/passthrough.js';
 
 // Template rendering

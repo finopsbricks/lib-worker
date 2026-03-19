@@ -8,9 +8,9 @@ Uses `process.env` directly. No config abstraction. Missing required vars cause 
 |----------|---------|
 | `WORKER_SECRET` | Bearer token for orchestrator auth |
 | `WORKER_ORG` | Organization identifier |
-| `FOB_TXN_API_URL` | Txn app base URL |
-| `FOB_TXN_API_KEY` | Txn app API key |
-| `FOB_TXN_API_SECRET` | Txn app API secret |
+| `FOB_STATEMENTS_API_URL` | Statements app base URL |
+| `FOB_STATEMENTS_API_KEY` | Statements app API key |
+| `FOB_STATEMENTS_API_SECRET` | Statements app API secret |
 
 ## Optional
 
@@ -33,5 +33,5 @@ Uses `process.env` directly. No config abstraction. Missing required vars cause 
 ## Related Notes
 
 - [start-worker.md](/docs/architecture/start-worker.md)
-- [txn-client.md](/docs/architecture/txn-client.md)
+- [statements-client.md](/docs/architecture/statements-client.md)
 - [passthrough-client.md](/docs/architecture/passthrough-client.md)

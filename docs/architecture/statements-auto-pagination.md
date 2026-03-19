@@ -1,11 +1,11 @@
-# Txn Auto-Pagination
+# Statements Auto-Pagination
 
 `getAllTransactions` automatically fetches all pages of transactions.
 
 ```javascript
-import { txn } from '@fob/lib-worker';
+import { statements } from '@fob/lib-worker';
 
-const transactions = await txn.getAllTransactions(account_id);
+const transactions = await statements.getAllTransactions(account_id);
 // Returns all transactions, fetching 100 per page until exhausted
 ```
 
@@ -23,4 +23,4 @@ const transactions = await txn.getAllTransactions(account_id);
 
 ## Related Notes
 
-- [txn-client.md](/docs/architecture/txn-client.md)
+- [statements-client.md](/docs/architecture/statements-client.md)
