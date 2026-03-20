@@ -1,7 +1,7 @@
 // @ts-check
 
 import { readdirSync } from 'fs';
-import { join } from 'path';
+import { join, relative } from 'path';
 import { pathToFileURL } from 'url';
 import { isStepDefinition, createHandler } from './define-step.js';
 
@@ -70,6 +70,7 @@ export async function discoverSteps(steps_dir) {
       );
     }
 
+    step._file = relative(steps_dir, file_path);
     steps[step.slug] = step;
   }
 
