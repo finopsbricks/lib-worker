@@ -33,6 +33,7 @@ import { resolveConfig } from './utils/config-resolver.js';
  * @property {import('zod').ZodType<TInput>} [inputSchema] - Zod schema for step.config validation
  * @property {import('zod').ZodType<TOutput>} [outputSchema] - Zod schema for output validation
  * @property {(config: TInput, context: StepContext) => Promise<TOutput>} execute - Step implementation
+ * @property {boolean} [enabled] - Whether this step is discoverable (default: true)
  * @property {boolean} [__isStepDefinition] - Internal marker for type detection
  */
 
@@ -57,7 +58,7 @@ import { resolveConfig } from './utils/config-resolver.js';
  * @returns {StepDefinition<TInput, TOutput>}
  */
 export function defineStep(definition) {
-  const { slug, name, description, inputSchema, outputSchema, execute } = definition;
+  const { slug, name, description, inputSchema, outputSchema, execute, enabled = true } = definition;
 
   // Validate required fields
   if (!slug) throw new Error('defineStep: slug is required');
@@ -74,7 +75,7 @@ export function defineStep(definition) {
     inputSchema,
     outputSchema,
     execute,
-    // Marker to identify step definitions
+    enabled,
     __isStepDefinition: true,
   };
 }

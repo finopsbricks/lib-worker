@@ -26,6 +26,9 @@ export { validateEnv } from './validate-env.js';
 // Step definition
 export { defineStep, isStepDefinition, getStepHandler, createHandler } from './define-step.js';
 
+// Step discovery
+export { discoverSteps, createGetHandler } from './discover-steps.js';
+
 // Orchestrator integration
 export {
   attachDocument,
