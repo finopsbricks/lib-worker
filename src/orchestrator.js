@@ -15,6 +15,11 @@ const isDev = process.env.NODE_ENV === 'development';
 /** Local work record IDs (from `fob steps run`) should skip remote calls. */
 const isLocalRun = (work_record_id) => work_record_id.startsWith('local-');
 
+/** Resolve the temp directory for a work record. */
+function workRecordDir(work_record_id) {
+  return path.join('temp', 'work_records', work_record_id);
+}
+
 /**
  * Write content to local temp folder.
  * Written in all environments (needed by CLI-based LLM steps).
@@ -22,7 +27,7 @@ const isLocalRun = (work_record_id) => work_record_id.startsWith('local-');
  */
 function writeToLocalTemp(work_record_id, filename, content) {
   try {
-    const dir = path.join('temp', work_record_id);
+    const dir = workRecordDir(work_record_id);
     fs.mkdirSync(dir, { recursive: true });
     const filepath = path.join(dir, filename);
     fs.writeFileSync(filepath, content, 'utf8');
@@ -42,7 +47,7 @@ export function clearTemp(work_record_id) {
     return;
   }
   try {
-    const dir = path.join('temp', work_record_id);
+    const dir = workRecordDir(work_record_id);
     fs.rmSync(dir, { recursive: true, force: true });
     console.log(`[Orchestrator] Cleared temp: ${dir}`);
   } catch (err) {
@@ -106,7 +111,7 @@ export async function attachDocument(work_record_id, title, content, step_slug) 
 export async function attachFile(work_record_id, title, filepath, step_slug) {
   // Copy to local temp (always, for dev inspection)
   try {
-    const dir = path.join('temp', work_record_id);
+    const dir = workRecordDir(work_record_id);
     fs.mkdirSync(dir, { recursive: true });
     const dest = path.join(dir, path.basename(filepath));
     fs.copyFileSync(filepath, dest);
