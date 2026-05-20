@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.12.0] - 2026-05-20
+
+### Removed
+- `WORKER_TYPE` env var and `X-Worker-Type` poll header — worker type is no longer sent to orchestrator
+
 ## [0.6.1] - 2026-03-07
 
 ### Fixed
