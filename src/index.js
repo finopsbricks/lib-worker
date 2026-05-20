@@ -53,3 +53,15 @@ export { resolveConfig } from './utils/config-resolver.js';
 
 // Email
 export { sendEmail, sendEmailToMultiple } from './utils/email.js';
+
+// AI / LLM structured generation (OpenRouter)
+export {
+  createModel,
+  renderPrompt,
+  extractJsonFromText,
+  generateStructured,
+  extractDocument,
+  generateText,
+  Output,
+  tool,
+} from './ai.js';
