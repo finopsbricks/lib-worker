@@ -14,7 +14,7 @@ export function validateEnv(options = {}) {
   const required = [
     'ORCHESTRATOR_API_KEY',
     'ORCHESTRATOR_API_SECRET',
-    'STEP_PREFIX',
+    'WORKER_LOCATION',
   ];
 
   if (options.requirePassthrough) {
@@ -36,5 +36,5 @@ export function validateEnv(options = {}) {
 
   console.log('[Worker] Environment validated');
   console.log('[Worker] Orchestrator:', process.env.ORCHESTRATOR_URL || 'http://localhost:3000');
-  console.log('[Worker] Step prefix:', process.env.STEP_PREFIX);
+  console.log('[Worker] Location:', process.env.WORKER_LOCATION);
 }

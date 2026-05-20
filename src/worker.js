@@ -22,7 +22,7 @@ async function pollForTask() {
       headers: {
         'api-key': process.env.ORCHESTRATOR_API_KEY,
         'api-secret': process.env.ORCHESTRATOR_API_SECRET,
-        'X-Step-Prefix': process.env.STEP_PREFIX,
+        'X-Location': process.env.WORKER_LOCATION,
       },
     });
 
@@ -146,7 +146,7 @@ export async function startWorker({ getHandler, callerUrl, validateOptions = {} 
   console.log('================================================');
   console.log('[Worker] Starting worker...');
   console.log('[Worker] Orchestrator:', orchestratorUrl);
-  console.log('[Worker] Step prefix:', process.env.STEP_PREFIX);
+  console.log('[Worker] Location:', process.env.WORKER_LOCATION);
   console.log('[Worker] Poll interval:', pollInterval, 'ms');
   console.log('================================================');
 

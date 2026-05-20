@@ -5,7 +5,7 @@
  *
  * Supports:
  * - {{env.VAR_NAME}} - Environment variables
- * - {{step_slug.field}} - Previous step outputs (e.g., {{alex/fetch_data.accounts}})
+ * - {{step_slug.field}} - Previous step outputs (e.g., {{fetch_data.accounts}})
  * - {{step_slug.field.nested}} - Nested field access
  *
  * Usage:
@@ -14,7 +14,7 @@
  */
 
 /**
- * Template pattern: {{env.VAR}} or {{step/slug.field.path}}
+ * Template pattern: {{env.VAR}} or {{step_slug.field.path}}
  */
 const TEMPLATE_PATTERN = /\{\{([^}]+)\}\}/g;
 
@@ -40,7 +40,7 @@ function getNestedValue(obj, path) {
 
 /**
  * Resolve a single template expression
- * @param {string} expression - Template expression without braces (e.g., "env.FOB_API_KEY" or "alex/fetch_data.accounts")
+ * @param {string} expression - Template expression without braces (e.g., "env.FOB_API_KEY" or "fetch_data.accounts")
  * @param {Object<string, object>} step_outputs - Previous step outputs keyed by slug
  * @returns {any} - Resolved value
  */
@@ -57,19 +57,16 @@ function resolveExpression(expression, step_outputs) {
     return value;
   }
 
-  // Step output: {{step/slug.field.path}}
-  // Find the step slug (contains /) and field path
-  const slash_index = trimmed.indexOf('/');
-  if (slash_index === -1) {
-    console.warn(`[config-resolver] Invalid template expression: ${trimmed}`);
-    return undefined;
-  }
-
-  // Find the first dot after the slash to separate slug from field path
-  const dot_index = trimmed.indexOf('.', slash_index);
+  // Step output: {{step_slug.field.path}} or {{step_slug}}
+  // First dot separates slug from field path
+  const dot_index = trimmed.indexOf('.');
   if (dot_index === -1) {
-    console.warn(`[config-resolver] No field path in expression: ${trimmed}`);
-    return undefined;
+    // No dot — return entire step output
+    const step_output = step_outputs[trimmed];
+    if (step_output === undefined) {
+      console.warn(`[config-resolver] Step output not found: ${trimmed}`);
+    }
+    return step_output;
   }
 
   const step_slug = trimmed.slice(0, dot_index);
@@ -144,11 +141,11 @@ function resolveValue(value, step_outputs) {
  * const resolved = resolveConfig(
  *   {
  *     api_key: "{{env.FOB_API_KEY}}",
- *     accounts: "{{alex/fetch_data.accounts}}",
- *     report_date: "{{alex/fetch_data.report_date}}"
+ *     accounts: "{{fetch_data.accounts}}",
+ *     report_date: "{{fetch_data.report_date}}"
  *   },
  *   {
- *     "alex/fetch_data": { accounts: [...], report_date: "2024-01-15" }
+ *     "fetch_data": { accounts: [...], report_date: "2024-01-15" }
  *   }
  * );
  */
