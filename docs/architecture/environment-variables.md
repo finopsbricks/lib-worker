@@ -17,7 +17,6 @@ Uses `process.env` directly. No config abstraction. Missing required vars cause 
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `ORCHESTRATOR_URL` | http://localhost:3000 | Orchestrator base URL |
-| `WORKER_TYPE` | customer | Worker type identifier |
 | `POLL_INTERVAL_MS` | 2000 | Polling interval |
 | `NODE_ENV` | - | If 'development', skips temp cleanup |
 

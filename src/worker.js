@@ -22,7 +22,6 @@ async function pollForTask() {
       headers: {
         'api-key': process.env.ORCHESTRATOR_API_KEY,
         'api-secret': process.env.ORCHESTRATOR_API_SECRET,
-        'X-Worker-Type': process.env.WORKER_TYPE || 'customer',
         'X-Step-Prefix': process.env.STEP_PREFIX,
       },
     });
@@ -142,13 +141,11 @@ export async function startWorker({ getHandler, callerUrl, validateOptions = {} 
   }
 
   const orchestratorUrl = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
-  const workerType = process.env.WORKER_TYPE || 'customer';
   const pollInterval = parseInt(process.env.POLL_INTERVAL_MS) || 2000;
 
   console.log('================================================');
-  console.log('[Worker] Starting customer worker...');
+  console.log('[Worker] Starting worker...');
   console.log('[Worker] Orchestrator:', orchestratorUrl);
-  console.log('[Worker] Type:', workerType);
   console.log('[Worker] Step prefix:', process.env.STEP_PREFIX);
   console.log('[Worker] Poll interval:', pollInterval, 'ms');
   console.log('================================================');

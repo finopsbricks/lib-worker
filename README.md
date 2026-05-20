@@ -135,7 +135,6 @@ Copy `.env.example` to `.env` and fill in values.
 ### Optional
 
 - `ORCHESTRATOR_URL` - Orchestrator URL (default: http://localhost:3000)
-- `WORKER_TYPE` - Worker type (default: customer)
 - `POLL_INTERVAL_MS` - Polling interval (default: 2000)
 
 ### Passthrough (if required)

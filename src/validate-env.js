@@ -37,5 +37,4 @@ export function validateEnv(options = {}) {
   console.log('[Worker] Environment validated');
   console.log('[Worker] Orchestrator:', process.env.ORCHESTRATOR_URL || 'http://localhost:3000');
   console.log('[Worker] Step prefix:', process.env.STEP_PREFIX);
-  console.log('[Worker] Type:', process.env.WORKER_TYPE || 'customer');
 }

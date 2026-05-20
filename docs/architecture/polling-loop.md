@@ -13,9 +13,9 @@ Infinite loop that fetches tasks from the orchestrator and dispatches to handler
 ## Poll Request Headers
 
 ```
-Authorization: Bearer {WORKER_SECRET}
-X-Worker-Type: {WORKER_TYPE}
-X-Worker-Org: {WORKER_ORG}
+api-key: {ORCHESTRATOR_API_KEY}
+api-secret: {ORCHESTRATOR_API_SECRET}
+X-Step-Prefix: {STEP_PREFIX}
 ```
 
 ## After Execution

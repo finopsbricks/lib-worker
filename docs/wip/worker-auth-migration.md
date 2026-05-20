@@ -80,7 +80,7 @@ These are two different representations of the same org and serve different purp
 - [x] Remove `WORKER_SECRET` from `instrumentation.js` required env vars list
 - [x] Update stale header comments in `poll`, `attach-document`, `attach-report` routes
 - [x] Confirmed no remaining `WORKER_SECRET` or `WORKER_ORG` references in `src/`
-- [x] Note: `workerAuth.js` is retained — it is still the worker auth adapter (wraps `validateApiKey`, adds `worker_type` and `step_prefix` from headers)
+- [x] Note: `workerAuth.js` is retained — it is still the worker auth adapter (wraps `validateApiKey`, adds `step_prefix` from headers)
 
 ### Phase 5: CLI — Align Worker Auth Headers ✅
 
