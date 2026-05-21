@@ -54,6 +54,9 @@ export { resolveConfig } from './utils/config-resolver.js';
 // Email
 export { sendEmail, sendEmailToMultiple } from './utils/email.js';
 
+// Worker path conventions
+export { bin, workRecordDir, workRecordFile } from './workerPaths.js';
+
 // File utilities
 export { moveFiles } from './files.js';
 
