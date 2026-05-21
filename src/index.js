@@ -47,6 +47,7 @@ export * as passthrough from './apps/passthrough.js';
 
 // Template rendering
 export { renderTemplate, initTemplates } from './utils/template-renderer.js';
+export { renderLocal } from './renderLocal.js';
 
 // Config resolution
 export { resolveConfig } from './utils/config-resolver.js';
@@ -59,6 +60,9 @@ export { bin, workRecordDir, workRecordFile } from './workerPaths.js';
 
 // File utilities
 export { moveFiles } from './files.js';
+
+// Shared step definitions
+export { default as moveFilesStep } from './steps/move_files.js';
 
 // AI / LLM structured generation (OpenRouter)
 export {

@@ -11,7 +11,12 @@
       "Bash(while read hash msg)",
       "Bash(do echo \"=== $msg ===\")",
       "Bash(done)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(m1ddc display:*)",
+      "Bash(m1ddc get:*)",
+      "Bash(m1ddc set:*)",
+      "WebFetch(domain:www.amazon.in)",
+      "Bash(read hash:*)"
     ]
   }
 }
