@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.14.0] - 2026-05-21
+
+### Added
+- Worker User-Agent and session support — workers now send structured `User-Agent` and `X-Session-ID` headers to orchestrator during polling
+- `buildUserAgent()` utility for constructing standardized user agent strings
+- Export `moveFiles` from file utilities
+
+### Changed
+- Updated architecture documentation for location-based routing
+
 ## [0.13.0] - 2026-05-21
 
 ### Added
