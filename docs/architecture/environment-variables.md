@@ -6,11 +6,9 @@ Uses `process.env` directly. No config abstraction. Missing required vars cause 
 
 | Variable | Purpose |
 |----------|---------|
-| `WORKER_SECRET` | Bearer token for orchestrator auth |
-| `WORKER_ORG` | Organization identifier |
-| `FOB_STATEMENTS_API_URL` | Statements app base URL |
-| `FOB_STATEMENTS_API_KEY` | Statements app API key |
-| `FOB_STATEMENTS_API_SECRET` | Statements app API secret |
+| `ORCHESTRATOR_API_KEY` | Per-org API key for orchestrator auth |
+| `ORCHESTRATOR_API_SECRET` | Per-org API secret for orchestrator auth |
+| `WORKER_LOCATION` | Location code for task routing (e.g., `nowapps3`, `agilitas`) |
 
 ## Optional
 

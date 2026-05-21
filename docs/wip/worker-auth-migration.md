@@ -1,8 +1,10 @@
 # Worker Auth Migration: WORKER_SECRET → ORCHESTRATOR_API_KEY
 
-## Status: COMPLETE
+## Status: COMPLETE (SUPERSEDED)
 
 Migrate worker-to-orchestrator authentication from a shared `WORKER_SECRET` to per-org orchestrator API keys. Also rename `WORKER_ORG` / `X-Worker-Org` to `STEP_PREFIX` / `X-Step-Prefix` to reflect their actual purpose (step prefix filtering, not org identity). Rename `step_queue.worker_org` column to `step_prefix`.
+
+> **Note**: `STEP_PREFIX` / `X-Step-Prefix` / `step_queue.step_prefix` have since been renamed again to `WORKER_LOCATION` / `X-Location` / `step_queue.location` as part of the location-based routing refactor. See `workers/worker-nowapps2/docs/wip/location-separated-from-slug.md`.
 
 ---
 

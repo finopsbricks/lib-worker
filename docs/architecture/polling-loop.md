@@ -15,7 +15,7 @@ Infinite loop that fetches tasks from the orchestrator and dispatches to handler
 ```
 api-key: {ORCHESTRATOR_API_KEY}
 api-secret: {ORCHESTRATOR_API_SECRET}
-X-Step-Prefix: {STEP_PREFIX}
+X-Location: {WORKER_LOCATION}
 ```
 
 ## After Execution

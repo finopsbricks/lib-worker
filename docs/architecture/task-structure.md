@@ -6,13 +6,13 @@ Tasks received from the orchestrator contain:
 {
   step_queue_id: 'sq_123',
   step: {
-    slug: 'alex/verify_statement',
+    slug: 'verify_statement',
     config: { /* step config from process definition */ },
   },
   work_record: {
     id: 'wr_456',
     item_snapshot: { id: 'stmt_789', ... },
-    step_outputs: { 'alex/fetch_data': { ... } },
+    step_outputs: { 'fetch_data': { ... } },
   },
   org_id: 'org_123',
 }
@@ -23,7 +23,7 @@ Tasks received from the orchestrator contain:
 | Field | Purpose |
 |-------|---------|
 | `step_queue_id` | StepQueue ID for reporting completion |
-| `step.slug` | Step slug, maps to handler function (e.g., 'alex/verify_statement') |
+| `step.slug` | Step slug, maps to handler function (identity only, e.g., 'verify_statement') |
 | `step.config` | Step configuration from process definition |
 | `work_record.id` | Work record ID for document attachments |
 | `work_record.item_snapshot` | Primary entity being processed |

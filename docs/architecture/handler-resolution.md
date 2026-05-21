@@ -6,9 +6,9 @@ The `getHandler` function maps step slugs to handler functions. Provided by the 
 // src/steps/index.js in worker repo
 export function getHandler(slug) {
   const handlers = {
-    'alex/fetch_statement': fetchStatement,
-    'alex/verify_statement': verifyStatement,
-    'alex/reconcile': reconcile,
+    'fetch_statement': fetchStatement,
+    'verify_statement': verifyStatement,
+    'reconcile': reconcile,
   };
   return handlers[slug] || null;
 }

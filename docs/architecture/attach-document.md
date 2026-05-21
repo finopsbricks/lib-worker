@@ -9,7 +9,7 @@ await attachDocument(
   work_record_id,  // Target work record
   title,           // Document title (e.g., 'Balance Check')
   content,         // Markdown content
-  step_slug        // Step slug for file naming (e.g., 'alex/verify_data')
+  step_slug        // Step slug for file naming (e.g., 'verify_data')
 );
 ```
 
@@ -37,7 +37,7 @@ export default async function verifyData(task) {
 
 Title is sanitized: spaces become underscores, special chars removed.
 
-Example: `temp/wr_123/alex_verify_data_Balance_Check.md`
+Example: `temp/wr_123/verify_data_Balance_Check.md`
 
 ## Related Notes
 
