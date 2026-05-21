@@ -54,6 +54,9 @@ export { resolveConfig } from './utils/config-resolver.js';
 // Email
 export { sendEmail, sendEmailToMultiple } from './utils/email.js';
 
+// File utilities
+export { moveFiles } from './files.js';
+
 // AI / LLM structured generation (OpenRouter)
 export {
   createModel,
