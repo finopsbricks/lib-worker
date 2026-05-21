@@ -28,11 +28,12 @@ export function buildUserAgent(options = {}) {
   }
 
   // Worker repo version (from caller's package.json)
+  // callerUrl is typically src/index.js, so package.json is one level up
   let worker_version = 'unknown';
   if (options.callerUrl) {
     try {
       const caller_require = createRequire(options.callerUrl);
-      const caller_pkg = caller_require('./package.json');
+      const caller_pkg = caller_require('../package.json');
       worker_version = caller_pkg.version || 'unknown';
     } catch {
       // Worker may not have package.json at expected path
