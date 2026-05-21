@@ -15,6 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.13.0] - 2026-05-21
+
+### Added
+- AI/LLM structured generation utilities (`generateStructured`, `extractDocument`, `createModel`, `renderPrompt`, `extractJsonFromText`) — consolidates duplicated code from worker repos
+- New dependencies: `ai`, `@openrouter/ai-sdk-provider`
+
+### Changed
+- Renamed `STEP_PREFIX` env var to `WORKER_LOCATION`
+- Renamed `X-Step-Prefix` poll header to `X-Location`
+- Config resolver uses first-dot parsing instead of slash-based prefix matching
+
 ## [0.12.0] - 2026-05-20
 
 ### Removed
