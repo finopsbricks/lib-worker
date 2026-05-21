@@ -6,8 +6,20 @@
 
 import { validateEnv } from './validate-env.js';
 import { initTemplates } from './utils/template-renderer.js';
+import { buildUserAgent } from './utils/build-user-agent.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** User agent string (built once at startup) */
+let worker_user_agent = null;
+
+/** Session ID assigned by the orchestrator */
+let session_id = null;
+
+/** Get the current session ID (for use by orchestrator.js helpers) */
+export function getSessionId() {
+  return session_id;
+}
 
 /**
  * Poll the orchestrator for a task
@@ -16,14 +28,23 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function pollForTask() {
   const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
 
+  const headers = {
+    'api-key': process.env.ORCHESTRATOR_API_KEY,
+    'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+    'X-Location': process.env.WORKER_LOCATION,
+  };
+
+  if (worker_user_agent) {
+    headers['X-Worker-User-Agent'] = worker_user_agent;
+  }
+  if (session_id) {
+    headers['X-Worker-Session'] = session_id;
+  }
+
   try {
     const response = await fetch(`${url}/api/worker/poll`, {
       method: 'GET',
-      headers: {
-        'api-key': process.env.ORCHESTRATOR_API_KEY,
-        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
-        'X-Location': process.env.WORKER_LOCATION,
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -33,6 +54,15 @@ async function pollForTask() {
     }
 
     const data = await response.json();
+
+    // Store session ID assigned by the orchestrator
+    if (data.session_id && data.session_id !== session_id) {
+      if (!session_id) {
+        console.log(`[Worker] Session established: ${data.session_id}`);
+      }
+      session_id = data.session_id;
+    }
+
     return data.task;
   } catch (error) {
     console.error('[Worker] Poll error:', error.message);
@@ -48,14 +78,19 @@ async function pollForTask() {
 async function reportComplete(step_queue_id, output) {
   const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
 
+  const headers = {
+    'api-key': process.env.ORCHESTRATOR_API_KEY,
+    'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+    'Content-Type': 'application/json',
+  };
+  if (session_id) {
+    headers['X-Worker-Session'] = session_id;
+  }
+
   try {
     const response = await fetch(`${url}/api/worker/complete`, {
       method: 'POST',
-      headers: {
-        'api-key': process.env.ORCHESTRATOR_API_KEY,
-        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ step_queue_id, output }),
     });
 
@@ -77,14 +112,19 @@ async function reportComplete(step_queue_id, output) {
 async function reportFailed(step_queue_id, error, retryable = true) {
   const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
 
+  const headers = {
+    'api-key': process.env.ORCHESTRATOR_API_KEY,
+    'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+    'Content-Type': 'application/json',
+  };
+  if (session_id) {
+    headers['X-Worker-Session'] = session_id;
+  }
+
   try {
     const response = await fetch(`${url}/api/worker/failed`, {
       method: 'POST',
-      headers: {
-        'api-key': process.env.ORCHESTRATOR_API_KEY,
-        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ step_queue_id, error, retryable }),
     });
 
@@ -140,6 +180,9 @@ export async function startWorker({ getHandler, callerUrl, validateOptions = {} 
     initTemplates(callerUrl);
   }
 
+  // Build user agent string once at startup
+  worker_user_agent = buildUserAgent({ callerUrl });
+
   const orchestratorUrl = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
   const pollInterval = parseInt(process.env.POLL_INTERVAL_MS) || 2000;
 
@@ -148,6 +191,7 @@ export async function startWorker({ getHandler, callerUrl, validateOptions = {} 
   console.log('[Worker] Orchestrator:', orchestratorUrl);
   console.log('[Worker] Location:', process.env.WORKER_LOCATION);
   console.log('[Worker] Poll interval:', pollInterval, 'ms');
+  console.log('[Worker] User-Agent:', worker_user_agent);
   console.log('================================================');
 
   // Handle graceful shutdown

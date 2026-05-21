@@ -9,6 +9,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { getSessionId } from './worker.js';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -75,8 +76,7 @@ export async function attachDocument(work_record_id, title, content, step_slug) 
     const response = await fetch(`${url}/api/worker/attach-document`, {
       method: 'POST',
       headers: {
-        'api-key': process.env.ORCHESTRATOR_API_KEY,
-        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+        ...getBaseHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -145,8 +145,7 @@ export async function attachFile(work_record_id, title, filepath, step_slug) {
     const response = await fetch(`${url}/api/worker/attach-file`, {
       method: 'POST',
       headers: {
-        'api-key': process.env.ORCHESTRATOR_API_KEY,
-        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+        ...getBaseHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -177,13 +176,20 @@ export async function attachFile(work_record_id, title, filepath, step_slug) {
 // Internal HTTP helpers (reuse auth from env)
 // ---------------------------------------------------------------------------
 
+function getBaseHeaders() {
+  const headers = {
+    'api-key': process.env.ORCHESTRATOR_API_KEY,
+    'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+  };
+  const sid = getSessionId();
+  if (sid) headers['X-Worker-Session'] = sid;
+  return headers;
+}
+
 async function orchestratorGet(urlPath) {
   const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
   const res = await fetch(`${url}${urlPath}`, {
-    headers: {
-      'api-key': process.env.ORCHESTRATOR_API_KEY,
-      'api-secret': process.env.ORCHESTRATOR_API_SECRET,
-    },
+    headers: getBaseHeaders(),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -197,8 +203,7 @@ async function orchestratorPost(urlPath, body) {
   const res = await fetch(`${url}${urlPath}`, {
     method: 'POST',
     headers: {
-      'api-key': process.env.ORCHESTRATOR_API_KEY,
-      'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+      ...getBaseHeaders(),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
@@ -302,8 +307,7 @@ export async function attachReport(work_record_id, content) {
     const response = await fetch(`${url}/api/worker/attach-report`, {
       method: 'POST',
       headers: {
-        'api-key': process.env.ORCHESTRATOR_API_KEY,
-        'api-secret': process.env.ORCHESTRATOR_API_SECRET,
+        ...getBaseHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
