@@ -1,11 +1,11 @@
 /**
  * Build a user agent string for this worker process.
  *
- * Format mimics browser UA strings:
- * fob-worker/<lib_version> (<os> <arch>; <hostname>; <username>; pid:<pid>) node/<node_version> worker/<worker_version> ram:<gb>GB cpu:<count>x<model> cwd:<dir> sudo:<yes|no>
+ * Format:
+ * <worker_name>/<version> (<os> <arch>; <hostname>; <username>; pid:<pid>) node/<node_version> ram:<gb>GB cpu:<count>x<model> cwd:<dir> sudo:<yes|no>
  *
  * Example:
- * fob-worker/0.13.0 (linux x64; ip-172-31-4-52; ubuntu; pid:3847) node/20.11.0 worker/1.2.0 ram:16GB cpu:4xIntel_Xeon_E5-2676 cwd:/home/ubuntu/workers/nowapps sudo:no
+ * worker-nowapps/1.2.0 (linux x64; ip-172-31-4-52; ubuntu; pid:3847) node/20.11.0 ram:16GB cpu:4xIntel_Xeon_E5-2676 cwd:/home/ubuntu/workers/nowapps sudo:no
  */
 
 import os from 'os';
@@ -17,24 +17,18 @@ import { createRequire } from 'module';
  * @returns {string}
  */
 export function buildUserAgent(options = {}) {
-  // lib-worker version from our own package.json
-  const require_fn = createRequire(import.meta.url);
-  let lib_version = 'unknown';
-  try {
-    const pkg = require_fn('../../package.json');
-    lib_version = pkg.version;
-  } catch {
-    // fallback
-  }
-
-  // Worker repo version (from caller's package.json)
+  // Worker repo name and version (from caller's package.json)
   // callerUrl is typically src/index.js, so package.json is one level up
+  let worker_name = 'worker';
   let worker_version = 'unknown';
   if (options.callerUrl) {
     try {
       const caller_require = createRequire(options.callerUrl);
       const caller_pkg = caller_require('../package.json');
       worker_version = caller_pkg.version || 'unknown';
+      if (caller_pkg.name) {
+        worker_name = caller_pkg.name.replace(/^@[^/]+\//, '');
+      }
     } catch {
       // Worker may not have package.json at expected path
     }
@@ -71,10 +65,9 @@ export function buildUserAgent(options = {}) {
   }
 
   const parts = [
-    `fob-worker/${lib_version}`,
+    `${worker_name}/${worker_version}`,
     `(${platform} ${arch}; ${hostname}; ${username}; pid:${pid})`,
     `node/${node_version}`,
-    `worker/${worker_version}`,
     `ram:${ram_gb}GB`,
     `cpu:${cpu_count}x${cpu_model}`,
     `cwd:${cwd}`,
