@@ -12,7 +12,7 @@ function parseBin(name) {
 }
 
 export default defineStep({
-  slug: 'move_files',
+  slug: 'lib-worker:move_files',
   name: 'Move Files Between Bins',
   description: 'Generic conveyor belt step — moves files or directories from one station bin to another',
 
