@@ -134,7 +134,7 @@ Small extraction, clean standalone integration.
 - [x] Remove passthrough exports from `src/index.js`
 - [x] Remove `src/apps/` directory entirely (empty after extractions)
 - [x] Bump lib-worker to v0.20.0
-- [ ] Update lib-worker CLAUDE.md to reflect slimmed-down scope
+- [x] Update lib-worker CLAUDE.md to reflect slimmed-down scope
 - [ ] Update all workers to pin latest lib-worker version
 
 ---
