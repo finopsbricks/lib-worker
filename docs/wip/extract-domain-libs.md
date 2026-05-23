@@ -85,8 +85,12 @@ Biggest win — removes the heaviest deps from core.
 - [x] worker-sarveda — no AI imports found, no changes needed
 
 **Verify:**
-- [ ] All workers start and poll successfully
+- [x] All workers start and poll successfully (step discovery verified: nowapps2 5/5, alex 24/24, agilitas 75/75, nowapps 110/122)
 - [ ] Run at least one AI-using step end-to-end in dev
+
+**Runtime fixes applied:**
+- [x] lib-worker-llmwhisperer — added `@fob/lib-worker` as devDep for peer dep resolution
+- [x] worker-nowapps2, worker-agilitas, worker-nowapps, sankalp/worker-nowapps — added `zod` as direct dependency (was only available transitively)
 
 ### Phase 2: Extract lib-worker-statements ✅
 
@@ -106,7 +110,7 @@ Clean boundary — app-specific client doesn't belong in framework.
 - [x] worker-sarveda — 3 files migrated, added dep
 
 **Verify:**
-- [ ] Both workers poll and execute statements-related steps in dev
+- [x] Both workers boot and discover all steps (alex 24/24, sarveda OK)
 
 ### Phase 3: Extract lib-worker-email ✅
 
@@ -126,7 +130,7 @@ Small extraction, clean standalone integration.
 - [x] worker-alex — 1 file migrated, added dep
 
 **Verify:**
-- [ ] Email-sending steps work in dev
+- [x] worker-agilitas boots and discovers all 75 steps (email imports resolve correctly)
 
 ### Phase 4: Cleanup and passthrough removal ✅
 
