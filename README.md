@@ -2,6 +2,11 @@
 
 Shared worker infrastructure for process engine workers.
 
+## Documentation
+
+- **API reference and usage guide**: [fde-handbook/libraries/lib-worker.md](../../fde-handbook/libraries/lib-worker.md)
+- **Framework internals**: [platform-handbook/architecture/worker-internals/](../../platform-handbook/architecture/worker-internals/)
+
 ## Installation
 
 ```bash

@@ -34,7 +34,8 @@ This package is part of **FinOpsBricks** (`/Users/alex/ec2code/finopsbricks/`):
 - **`apps/statements.finopsbricks.com`** — System of record for statements, accounts, transactions.
 - **`workers/*`** — Customer-specific workers that consume this package.
 - **`cli/`** — Developer CLI (`fob`) for debugging steps locally.
-- **`accounting-process-standards/`** — Step design patterns and process architecture docs.
+- **`fde-handbook/`** — Step patterns, process design, capabilities, library APIs.
+- **`platform-handbook/`** — Platform architecture, operations, internals.
 
 ## Package Structure
 
@@ -115,25 +116,9 @@ This updates `package.json` and `package-lock.json` in all dependent repos under
 2. **Fail fast** - Missing required env vars cause immediate exit
 3. **Defaults in .env.example** - Not in code
 
-## Standards Reference
+## Documentation
 
-This project follows standards documented in separate repositories.
-
-### Accounting Process Standards (Primary)
-
-Standards specific to building AI-powered accounting processes, step design, and system integration.
-
-**Location**: `~/ec2code/finopsbricks/accounting-process-standards`
-
-Key topics:
-- **Principles**: `deterministic-before-llm.md`, `audit-trail-first.md`, `structured-checks.md`, `step-independence.md`
-- **Architecture**: `system-layers.md`, `orchestrator-integration.md`, `system-of-record-integration.md`
-- **Steps**: `step-handler-pattern.md`, `step-output-contract.md`, `document-attachment.md`, `check-structure.md`
-- **Processes**: `process-phases.md`, `verification-workflow.md`, `step-sequencing.md`
-- **Naming**: `step-types.md`, `check-naming.md`, `variables-and-functions.md`
-
-### General Engineering Standards
-
-General web development standards (JavaScript, testing, git workflow).
-
-**Location**: `~/ec2code/alex/engineering-standards`
+- **FDE Handbook** (step patterns, process design, capabilities, library APIs): `/Users/alex/ec2code/finopsbricks/fde-handbook/`
+- **Platform Handbook** (architecture, operations, internals): `/Users/alex/ec2code/finopsbricks/platform-handbook/`
+- **CFO Handbook** (domain expertise, accounting best practices): `/Users/alex/ec2code/finopsbricks/cfo-handbook/`
+- **Engineering Standards** (JS, testing, git conventions): `/Users/alex/ec2code/alex/engineering-standards/`
