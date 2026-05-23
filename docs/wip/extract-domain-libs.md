@@ -1,6 +1,6 @@
 # Extract Domain Libraries from lib-worker
 
-## Status: IN PROGRESS (~90%)
+## Status: COMPLETE
 
 Extract specialized concerns from the lib-worker monolith into focused domain libraries. lib-worker currently bundles 6+ unrelated concerns — AI/LLM, Statements API, Passthrough, Email — alongside the core worker framework. This creates unnecessary dependency weight and blurs library boundaries.
 
