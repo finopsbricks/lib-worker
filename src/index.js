@@ -41,19 +41,12 @@ export {
   runProcess,
 } from './orchestrator.js';
 
-// API clients
-export * as statements from './apps/statements.js';
-export * as passthrough from './apps/passthrough.js';
-
 // Template rendering
 export { renderTemplate, initTemplates } from './utils/template-renderer.js';
 export { renderLocal } from './renderLocal.js';
 
 // Config resolution
 export { resolveConfig } from './utils/config-resolver.js';
-
-// Email
-export { sendEmail, sendEmailToMultiple } from './utils/email.js';
 
 // Worker path conventions
 export { bin, workRecordDir, workRecordFile } from './workerPaths.js';

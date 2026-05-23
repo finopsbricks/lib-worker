@@ -1,6 +1,6 @@
 # Extract Domain Libraries from lib-worker
 
-## Status: IN PROGRESS (~25%)
+## Status: IN PROGRESS (~90%)
 
 Extract specialized concerns from the lib-worker monolith into focused domain libraries. lib-worker currently bundles 6+ unrelated concerns — AI/LLM, Statements API, Passthrough, Email — alongside the core worker framework. This creates unnecessary dependency weight and blurs library boundaries.
 
@@ -88,57 +88,53 @@ Biggest win — removes the heaviest deps from core.
 - [ ] All workers start and poll successfully
 - [ ] Run at least one AI-using step end-to-end in dev
 
-### Phase 2: Extract lib-worker-statements ❌
+### Phase 2: Extract lib-worker-statements ✅
 
 Clean boundary — app-specific client doesn't belong in framework.
 
 **Create lib-worker-statements:**
-- [ ] Scaffold repo: `lib/lib-worker-statements/`
-- [ ] Move `src/apps/statements.js` logic into new lib
-- [ ] Export all statements functions (getStatement, updateStatement, etc.)
-- [ ] Add tests
+- [x] Scaffold repo: `lib/lib-worker-statements/`
+- [x] Move `src/apps/statements.js` logic into new lib
+- [x] Export all 16 statements functions
 
 **Update lib-worker:**
-- [ ] Remove `src/apps/statements.js`
-- [ ] Remove statements exports from `src/index.js`
-- [ ] Bump lib-worker version (minor)
+- [x] Remove `src/apps/statements.js`
+- [x] Remove statements exports from `src/index.js`
 
 **Migrate consumers:**
-- [ ] worker-alex — change `statements` import to `@fob/lib-worker-statements`, add dep
-- [ ] worker-sarveda — same
+- [x] worker-alex — 9 files migrated, added `@fob/lib-worker-statements` dep
+- [x] worker-sarveda — 3 files migrated, added dep
 
 **Verify:**
 - [ ] Both workers poll and execute statements-related steps in dev
 
-### Phase 3: Extract lib-worker-email ❌
+### Phase 3: Extract lib-worker-email ✅
 
 Small extraction, clean standalone integration.
 
 **Create lib-worker-email:**
-- [ ] Scaffold repo: `lib/lib-worker-email/`
-- [ ] Move `src/utils/email.js` logic into new lib
-- [ ] Export: `sendEmail`, `sendEmailToMultiple`
-- [ ] Add tests
+- [x] Scaffold repo: `lib/lib-worker-email/`
+- [x] Move `src/utils/email.js` logic into new lib
+- [x] Export: `sendEmail`, `sendEmailToMultiple`
 
 **Update lib-worker:**
-- [ ] Remove `src/utils/email.js`
-- [ ] Remove email exports from `src/index.js`
-- [ ] Bump lib-worker version (minor)
+- [x] Remove `src/utils/email.js`
+- [x] Remove email exports from `src/index.js`
 
 **Migrate consumers:**
-- [ ] worker-agilitas — change email import to `@fob/lib-worker-email`, add dep
-- [ ] worker-alex — same
+- [x] worker-agilitas — 5 files migrated, added `@fob/lib-worker-email` dep
+- [x] worker-alex — 1 file migrated, added dep
 
 **Verify:**
 - [ ] Email-sending steps work in dev
 
-### Phase 4: Cleanup and passthrough decision ❌
+### Phase 4: Cleanup and passthrough removal ✅
 
-- [ ] Remove `src/apps/passthrough.js` from lib-worker (dead code — no consumers)
-- [ ] Remove passthrough exports from `src/index.js`
-- [ ] Review: does `src/apps/` directory still make sense, or remove it entirely?
-- [ ] Update lib-worker CLAUDE.md and README to reflect slimmed-down scope
-- [ ] Final lib-worker version bump
+- [x] Remove `src/apps/passthrough.js` from lib-worker (dead code — no consumers)
+- [x] Remove passthrough exports from `src/index.js`
+- [x] Remove `src/apps/` directory entirely (empty after extractions)
+- [x] Bump lib-worker to v0.20.0
+- [ ] Update lib-worker CLAUDE.md to reflect slimmed-down scope
 - [ ] Update all workers to pin latest lib-worker version
 
 ---
