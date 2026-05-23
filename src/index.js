@@ -65,14 +65,3 @@ export { moveFiles } from './files.js';
 export { default as moveFilesStep } from './steps/move_files.js';
 export { default as splitBundlesStep } from './steps/split_bundles.js';
 
-// AI / LLM structured generation (OpenRouter)
-export {
-  createModel,
-  renderPrompt,
-  extractJsonFromText,
-  generateStructured,
-  extractDocument,
-  generateText,
-  Output,
-  tool,
-} from './ai.js';
