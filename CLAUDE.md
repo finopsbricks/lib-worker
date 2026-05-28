@@ -34,8 +34,8 @@ This package is part of **FinOpsBricks** (`/Users/alex/ec2code/finopsbricks/`):
 - **`apps/statements.finopsbricks.com`** — System of record for statements, accounts, transactions.
 - **`workers/*`** — Customer-specific workers that consume this package.
 - **`cli/`** — Developer CLI (`fob`) for debugging steps locally.
-- **`fde-handbook/`** — Step patterns, process design, capabilities, library APIs.
-- **`platform-handbook/`** — Platform architecture, operations, internals.
+- **`fde-handbook`** — step patterns, process design, capabilities, library APIs.
+- **`platform-handbook`** — platform architecture, operations, internals.
 
 ## Package Structure
 
@@ -118,7 +118,7 @@ This updates `package.json` and `package-lock.json` in all dependent repos under
 
 ## Documentation
 
-- **FDE Handbook** (step patterns, process design, capabilities, library APIs): `/Users/alex/ec2code/finopsbricks/fde-handbook/`
-- **Platform Handbook** (architecture, operations, internals): `/Users/alex/ec2code/finopsbricks/platform-handbook/`
-- **CFO Handbook** (domain expertise, accounting best practices): `/Users/alex/ec2code/finopsbricks/cfo-handbook/`
-- **Engineering Standards** (JS, testing, git conventions): `/Users/alex/ec2code/alex/engineering-standards/`
+- **FDE Handbook** (`fde-handbook`) — step patterns, process design, capabilities, library APIs
+- **Platform Handbook** (`platform-handbook`) — platform architecture, operations, internals
+- **CFO Handbook** (`cfo-handbook`) — domain expertise, accounting best practices
+- **Engineering Standards** (`engineering-standards`) — JS, testing, git conventions
