@@ -18,6 +18,24 @@ function matchesPattern(filename, pattern) {
 }
 
 /**
+ * Recursively merge src directory into dst, then remove src.
+ * Files in src are moved into dst; subdirectories are merged recursively.
+ */
+function mergeDir(src, dst) {
+  fs.mkdirSync(dst, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, entry.name);
+    const d = path.join(dst, entry.name);
+    if (entry.isDirectory()) {
+      mergeDir(s, d);
+    } else {
+      fs.renameSync(s, d);
+    }
+  }
+  fs.rmSync(src, { recursive: true });
+}
+
+/**
  * Move files or directories from source_dir to target_dir.
  *
  * @param {object} options
@@ -65,7 +83,15 @@ export function moveFiles({
   fs.mkdirSync(target_dir, { recursive: true });
 
   for (const entry of batch) {
-    fs.renameSync(path.join(source_dir, entry), path.join(target_dir, entry));
+    const src = path.join(source_dir, entry);
+    const dst = path.join(target_dir, entry);
+
+    if (mode === 'directories' && fs.existsSync(dst)) {
+      // Target dir exists — merge contents recursively
+      mergeDir(src, dst);
+    } else {
+      fs.renameSync(src, dst);
+    }
   }
 
   return { moved_count: batch.length, total_available: all_entries.length, entries: batch };

@@ -9,7 +9,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test": "echo \"No tests yet\""
+    "test": "node --test 'test/**/*.test.js'"
   },
   "repository": {
     "type": "git",
