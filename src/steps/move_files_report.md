@@ -1,22 +1,26 @@
-# Transfer: <%= source_bin %> → <%= target_bin %>
+# Move Files Report
 
 **Timestamp**: <%= timestamp %>
-**Mode**: <%= mode %>
 
-| Metric | Count |
-|--------|------:|
-| Moved | <%= moved_count %> |
-| Total Available | <%= total_available %> |
+| # | Source | Target | Mode | Moved | Available |
+|---|--------|--------|------|------:|----------:|
+<% moves_detail.forEach((m, i) => { -%>
+| <%= i + 1 %> | <%= m.source_bin %> | <%= m.target_bin %> | <%= m.mode %> | <%= m.moved_count %> | <%= m.total_available %> |
+<% }) -%>
 
-<% if (entries.length > 0) { -%>
-## Entries Moved
+**Total moved**: <%= total_moved %> / <%= total_available %> available
+<% moves_detail.forEach((m, i) => { -%>
+<% if (m.entries.length > 0) { -%>
 
-| <%= mode === 'directories' ? 'Directory' : 'File' %> |
+## Move <%= i + 1 %>: <%= m.source_bin %> → <%= m.target_bin %>
+
+| <%= m.mode === 'directories' ? 'Directory' : 'File' %> |
 |------|
-<% for (const e of entries) { -%>
+<% m.entries.forEach(e => { -%>
 | `<%= e %>` |
+<% }) -%>
 <% } -%>
-<% } -%>
+<% }) -%>
 
 ---
 *Work Record: <%= work_record_id %>*
