@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.22.0] - 2026-05-29
+
+### Added
+- Multi-source moves in `lib-worker:move_files` step — `source_bin` now accepts an array of bins to merge files from multiple sources into one target
+- Test suite for `move_files` step (file mode, directory mode, multi-source mode)
+
+### Fixed
+- `move_files` step defaults to `attachDocument` instead of `attachReport`
+- `split_bundles` step defaults to `attachDocument` instead of `attachReport`
+
 ## [0.21.1] - 2026-05-29
 
 ### Fixed
