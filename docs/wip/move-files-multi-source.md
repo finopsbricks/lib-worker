@@ -1,6 +1,6 @@
 # Multi-Source move_files Config
 
-## Status: IN PROGRESS (~50%)
+## Status: IN PROGRESS (~75%)
 
 Extend `lib-worker:move_files` to support a `moves` array config, allowing multiple source→target operations in a single step. This avoids needing duplicate step slugs in process definitions.
 
@@ -102,12 +102,12 @@ The report template should show a per-move breakdown:
 - [x] Test: report contains per-move breakdown
 - [x] Test: `report: true` calls `attachReport` instead of `attachDocument`
 
-### Phase 3: Process definitions 🔄
+### Phase 3: Process definitions ✅
 
-- [ ] Update HCN3 process definition — collapse two steps into one with `moves`
-- [ ] Update HI3 process definition — collapse two steps into one with `moves`
+- [x] Update HCN3 process definition — collapse two steps into one with `moves`
+- [x] Update HI3 process definition — collapse two steps into one with `moves`
 
-### Phase 4: Documentation ❌
+### Phase 4: Documentation 🔄
 
 - [ ] Update FDE handbook assembly-line-processing.md — document moves config
 - [ ] Release new lib-worker version
