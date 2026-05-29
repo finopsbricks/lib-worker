@@ -1,5 +1,5 @@
 import { defineStep } from '../define-step.js';
-import { attachReport } from '../orchestrator.js';
+import { attachDocument, attachReport } from '../orchestrator.js';
 import { moveFiles } from '../files.js';
 import { bin } from '../workerPaths.js';
 import { renderLocal } from '../renderLocal.js';
@@ -24,8 +24,8 @@ export default defineStep({
   description: 'Generic conveyor belt step — moves files or directories from one station bin to another',
 
   inputSchema: z.union([
-    moveSchema,
-    z.object({ moves: z.array(moveSchema).min(1) }),
+    moveSchema.extend({ report: z.boolean().default(false) }),
+    z.object({ moves: z.array(moveSchema).min(1), report: z.boolean().default(false) }),
   ]),
   outputSchema: z.object({
     moved_count: z.number(),
@@ -67,11 +67,16 @@ export default defineStep({
       });
     }
 
-    const report = renderLocal(import.meta.url, './move_files_report.md', {
+    const content = renderLocal(import.meta.url, './move_files_report.md', {
       moves_detail, total_moved, total_available,
       work_record_id: work_record.id, timestamp: new Date().toISOString(),
     });
-    await attachReport(work_record.id, report);
+
+    if (config.report) {
+      await attachReport(work_record.id, content);
+    } else {
+      await attachDocument(work_record.id, 'Move Files', content, context.step.slug);
+    }
 
     return { moved_count: total_moved, total_available, entries: all_entries };
   },

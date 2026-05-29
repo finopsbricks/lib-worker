@@ -6,11 +6,13 @@ import os from 'node:os';
 
 let tmp_dir;
 
-// Mock orchestrator (attachReport is an HTTP call we don't want)
+// Mock orchestrator (HTTP calls we don't want)
 const attachReportCalls = [];
+const attachDocumentCalls = [];
 mock.module('../src/orchestrator.js', {
   namedExports: {
     attachReport: async (...args) => { attachReportCalls.push(args); },
+    attachDocument: async (...args) => { attachDocumentCalls.push(args); },
   },
 });
 
@@ -41,7 +43,7 @@ function exists(rel_path) {
   return fs.existsSync(path.join(tmp_dir, rel_path));
 }
 
-const mockContext = { work_record: { id: 'wr_test_123' } };
+const mockContext = { work_record: { id: 'wr_test_123' }, step: { slug: 'lib-worker:move_files' } };
 
 // ── Schema validation ────────────────────────────────────────
 
@@ -87,6 +89,7 @@ describe('move_files execute', () => {
   beforeEach(() => {
     tmp_dir = fs.mkdtempSync(path.join(os.tmpdir(), 'move-files-step-'));
     attachReportCalls.length = 0;
+    attachDocumentCalls.length = 0;
   });
 
   afterEach(() => {
@@ -107,8 +110,11 @@ describe('move_files execute', () => {
     assert.deepEqual(result.entries, ['a.txt', 'b.txt']);
     assert.ok(exists('stations/HI3/input/a.txt'));
     assert.ok(!exists('stations/HI1/output/a.txt'));
-    assert.equal(attachReportCalls.length, 1);
-    assert.equal(attachReportCalls[0][0], 'wr_test_123');
+    // Default: attachDocument (supporting document)
+    assert.equal(attachDocumentCalls.length, 1);
+    assert.equal(attachDocumentCalls[0][0], 'wr_test_123');
+    assert.equal(attachDocumentCalls[0][1], 'Move Files');
+    assert.equal(attachReportCalls.length, 0);
   });
 
   it('moves array with two moves aggregates counts', async () => {
@@ -131,7 +137,8 @@ describe('move_files execute', () => {
     assert.ok(exists('stations/HI3/input/a.txt'));
     assert.ok(exists('stations/HI3/input/b.txt'));
     assert.ok(exists('stations/HI3/input/c.txt'));
-    assert.equal(attachReportCalls.length, 1);
+    assert.equal(attachDocumentCalls.length, 1);
+    assert.equal(attachReportCalls.length, 0);
   });
 
   it('moves array with different modes', async () => {
@@ -184,10 +191,24 @@ describe('move_files execute', () => {
 
     await moveFilesStep.execute(config, mockContext);
 
-    const report = attachReportCalls[0][1];
-    assert.ok(report.includes('HI1/output'));
-    assert.ok(report.includes('HI1/done'));
-    assert.ok(report.includes('HI3/input'));
-    assert.ok(report.includes('**Total moved**: 2 / 2 available'));
+    const content = attachDocumentCalls[0][2];
+    assert.ok(content.includes('HI1/output'));
+    assert.ok(content.includes('HI1/done'));
+    assert.ok(content.includes('HI3/input'));
+    assert.ok(content.includes('**Total moved**: 2 / 2 available'));
+  });
+
+  it('report: true uploads as report instead of document', async () => {
+    mkfile('stations/HI1/output/a.txt', 'aaa');
+
+    const result = await moveFilesStep.execute(
+      { source_bin: 'HI1/output', target_bin: 'HI3/input', mode: 'files', pattern: '*', batch_size: 100, report: true },
+      mockContext,
+    );
+
+    assert.equal(result.moved_count, 1);
+    assert.equal(attachReportCalls.length, 1);
+    assert.equal(attachReportCalls[0][0], 'wr_test_123');
+    assert.equal(attachDocumentCalls.length, 0);
   });
 });
