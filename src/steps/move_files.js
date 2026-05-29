@@ -5,10 +5,9 @@ import { bin } from '../workerPaths.js';
 import { renderLocal } from '../renderLocal.js';
 import { z } from 'zod';
 
-/** Split "HI1_output" → ['HI1', 'output'] on last underscore */
+/** Split "HI1/output" → ['HI1', 'output'] */
 function parseBin(name) {
-  const i = name.lastIndexOf('_');
-  return [name.substring(0, i), name.substring(i + 1)];
+  return name.split('/');
 }
 
 export default defineStep({

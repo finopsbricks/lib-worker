@@ -2,7 +2,7 @@
  * Standard worker path conventions.
  *
  * Two paths under temp/:
- *   temp/work_area/{station}_{type}/   — assembly-line station bins
+ *   temp/stations/{station}/{type}/     — assembly-line station bins
  *   temp/work_records/{work_record_id}/ — per-run scratch space
  *
  * All directories auto-create on first access.
@@ -12,7 +12,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 const BASE = process.cwd();
-const WORK_AREA = path.join(BASE, 'temp', 'work_area');
+const STATIONS = path.join(BASE, 'temp', 'stations');
 const WORK_RECORDS = path.join(BASE, 'temp', 'work_records');
 
 /**
@@ -23,7 +23,7 @@ const WORK_RECORDS = path.join(BASE, 'temp', 'work_records');
  * @returns {string} Absolute path to the bin directory (auto-created)
  */
 export function bin(station, type) {
-  const dir = path.join(WORK_AREA, `${station}_${type}`);
+  const dir = path.join(STATIONS, station, type);
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
