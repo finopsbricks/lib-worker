@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.21.0] - 2026-05-29
+
+### Changed
+- **BREAKING**: Bin layout migrated from flat `temp/work_area/{station}_{type}/` to nested `temp/stations/{station}/{type}/`
+- **BREAKING**: `move_files` config format changed from `"HI1_output"` to `"HI1/output"` — all process definitions must update `source_bin`/`target_bin` values
+- `parseBin()` now splits on `/` instead of last underscore
+- Internal constant renamed from `WORK_AREA` to `STATIONS`
+
 ## [0.20.0] - 2026-05-23
 
 ### Removed
@@ -27,16 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `move_files` step slug renamed to `lib-worker:move_files` — library steps now namespace their slugs with `lib-name:` prefix for clarity in process definitions
-
-## [Unreleased]
-
-### Added
-
-### Changed
-
-### Fixed
-
-### Removed
 
 ## [0.14.0] - 2026-05-21
 
