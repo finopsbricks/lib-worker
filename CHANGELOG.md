@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.21.1] - 2026-05-29
+
+### Fixed
+- `moveFiles` directory mode now merges into existing target directories instead of failing with `ENOTEMPTY` — enables two `move_files` steps to move same-named bundles to the same target
+
+### Added
+- Test suite for `moveFiles` (file and directory modes)
+
 ## [0.21.0] - 2026-05-29
 
 ### Changed
