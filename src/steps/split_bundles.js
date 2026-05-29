@@ -1,5 +1,5 @@
 import { defineStep } from '../define-step.js';
-import { attachReport } from '../orchestrator.js';
+import { attachDocument, attachReport } from '../orchestrator.js';
 import { bin } from '../workerPaths.js';
 import { renderLocal } from '../renderLocal.js';
 import { z } from 'zod';
@@ -16,6 +16,7 @@ export default defineStep({
 
   inputSchema: z.object({
     station: z.string().describe('Station prefix, e.g. "HI1" or "HPO1". Derives bins: {station}_input, _output, _done, _failed'),
+    report: z.boolean().default(false),
   }),
   outputSchema: z.object({
     bundle_name: z.string(),
@@ -25,7 +26,11 @@ export default defineStep({
 
   execute: async (config, context) => {
     const { work_record } = context;
-    const { station } = config;
+    const { station, report: as_report } = config;
+
+    const attach = (content) => as_report
+      ? attachReport(work_record.id, content)
+      : attachDocument(work_record.id, 'Split Bundles', content, context.step.slug);
 
     const input_dir = bin(station, 'input');
     const output_dir = bin(station, 'output');
@@ -47,7 +52,7 @@ export default defineStep({
         bundles_remaining: 0, bundles_total: 0,
         station, work_record_id: work_record.id,
       });
-      await attachReport(work_record.id, report);
+      await attach(report);
       return { bundle_name: '', page_count: 0, status: 'no_pending_bundles' };
     }
 
@@ -73,7 +78,7 @@ export default defineStep({
         bundles_remaining: 0, bundles_total: bundle_files.length,
         station, work_record_id: work_record.id,
       });
-      await attachReport(work_record.id, report);
+      await attach(report);
       return { bundle_name: '', page_count: 0, status: 'no_pending_bundles' };
     }
 
@@ -113,7 +118,7 @@ export default defineStep({
         bundles_remaining: bundle_files.length - 1, bundles_total: bundle_files.length,
         station, stem: target_stem, work_record_id: work_record.id,
       });
-      await attachReport(work_record.id, report);
+      await attach(report);
 
       return { bundle_name: target_bundle, page_count: total_pages, status: 'split' };
     } catch (err) {
