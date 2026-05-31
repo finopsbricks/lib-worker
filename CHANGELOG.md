@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.23.0] - 2026-05-31
+
+### Added
+- `recursive` option for `moveFiles()` and `lib-worker:move_files` step — walks subdirectories and flattens files into target using `__` separator (e.g., `vendor-a/file.pdf` → `vendor-a__file.pdf`)
+
+### Fixed
+- `bin()` now accepts arbitrary depth segments — `source_bin: "CD2/output/PO"` was silently dropping the third segment and reading from `CD2/output/` instead
+- `move_files` step passes all bin path segments through to `bin()` via rest destructuring
+
 ## [0.22.0] - 2026-05-29
 
 ### Added

@@ -212,3 +212,128 @@ describe('moveFiles - directory mode', () => {
     assert.ok(exists('src/c'));
   });
 });
+
+// ── Recursive file mode ─────────────────────────────────────
+
+describe('moveFiles - recursive mode', () => {
+  it('collects files from subdirectories and flattens into target', () => {
+    mkfile('src/vendor-a/invoice1.pdf', 'pdf1');
+    mkfile('src/vendor-b/invoice2.pdf', 'pdf2');
+
+    const result = moveFiles({
+      source_dir: path.join(tmp_dir, 'src'),
+      target_dir: path.join(tmp_dir, 'dst'),
+      recursive: true,
+    });
+
+    assert.equal(result.moved_count, 2);
+    assert.equal(result.total_available, 2);
+    assert.deepEqual(result.entries, ['vendor-a__invoice1.pdf', 'vendor-b__invoice2.pdf']);
+    assert.equal(read('dst/vendor-a__invoice1.pdf'), 'pdf1');
+    assert.equal(read('dst/vendor-b__invoice2.pdf'), 'pdf2');
+  });
+
+  it('includes top-level files alongside nested files', () => {
+    mkfile('src/top.pdf', 'top');
+    mkfile('src/sub/nested.pdf', 'nested');
+
+    const result = moveFiles({
+      source_dir: path.join(tmp_dir, 'src'),
+      target_dir: path.join(tmp_dir, 'dst'),
+      recursive: true,
+    });
+
+    assert.equal(result.moved_count, 2);
+    assert.ok(result.entries.includes('top.pdf'));
+    assert.ok(result.entries.includes('sub__nested.pdf'));
+    assert.equal(read('dst/top.pdf'), 'top');
+    assert.equal(read('dst/sub__nested.pdf'), 'nested');
+  });
+
+  it('handles deeply nested subdirectories', () => {
+    mkfile('src/a/b/c/deep.txt', 'deep');
+
+    const result = moveFiles({
+      source_dir: path.join(tmp_dir, 'src'),
+      target_dir: path.join(tmp_dir, 'dst'),
+      recursive: true,
+    });
+
+    assert.equal(result.moved_count, 1);
+    assert.deepEqual(result.entries, ['a__b__c__deep.txt']);
+    assert.equal(read('dst/a__b__c__deep.txt'), 'deep');
+  });
+
+  it('cleans up empty subdirectories after moving', () => {
+    mkfile('src/sub/file.txt', 'data');
+
+    moveFiles({
+      source_dir: path.join(tmp_dir, 'src'),
+      target_dir: path.join(tmp_dir, 'dst'),
+      recursive: true,
+    });
+
+    assert.ok(exists('src'), 'source root should remain');
+    assert.ok(!exists('src/sub'), 'empty subdir should be removed');
+  });
+
+  it('applies pattern filter in recursive mode', () => {
+    mkfile('src/sub/a.pdf', 'pdf');
+    mkfile('src/sub/b.txt', 'txt');
+
+    const result = moveFiles({
+      source_dir: path.join(tmp_dir, 'src'),
+      target_dir: path.join(tmp_dir, 'dst'),
+      recursive: true,
+      pattern: '*.pdf',
+    });
+
+    assert.equal(result.moved_count, 1);
+    assert.deepEqual(result.entries, ['sub__a.pdf']);
+    assert.ok(exists('src/sub/b.txt'), 'non-matching file should remain');
+  });
+
+  it('respects batch_size in recursive mode', () => {
+    mkfile('src/a/file1.txt');
+    mkfile('src/b/file2.txt');
+    mkfile('src/c/file3.txt');
+
+    const result = moveFiles({
+      source_dir: path.join(tmp_dir, 'src'),
+      target_dir: path.join(tmp_dir, 'dst'),
+      recursive: true,
+      batch_size: 2,
+    });
+
+    assert.equal(result.moved_count, 2);
+    assert.equal(result.total_available, 3);
+  });
+
+  it('skips dotfiles and dot-directories in recursive mode', () => {
+    mkfile('src/.hidden/secret.txt');
+    mkfile('src/visible/.dotfile');
+    mkfile('src/visible/normal.txt', 'ok');
+
+    const result = moveFiles({
+      source_dir: path.join(tmp_dir, 'src'),
+      target_dir: path.join(tmp_dir, 'dst'),
+      recursive: true,
+    });
+
+    assert.equal(result.moved_count, 1);
+    assert.deepEqual(result.entries, ['visible__normal.txt']);
+    assert.ok(exists('src/.hidden/secret.txt'));
+    assert.ok(exists('src/visible/.dotfile'));
+  });
+
+  it('returns empty result when source does not exist', () => {
+    const result = moveFiles({
+      source_dir: path.join(tmp_dir, 'nope'),
+      target_dir: path.join(tmp_dir, 'dst'),
+      recursive: true,
+    });
+
+    assert.equal(result.moved_count, 0);
+    assert.equal(result.total_available, 0);
+  });
+});

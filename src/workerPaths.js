@@ -22,8 +22,8 @@ const WORK_RECORDS = path.join(BASE, 'temp', 'work_records');
  * @param {string} type - Lifecycle phase ('input', 'output', 'done', 'failed')
  * @returns {string} Absolute path to the bin directory (auto-created)
  */
-export function bin(station, type) {
-  const dir = path.join(STATIONS, station, type);
+export function bin(station, ...segments) {
+  const dir = path.join(STATIONS, station, ...segments);
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }

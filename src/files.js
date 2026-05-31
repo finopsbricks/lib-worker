@@ -36,6 +36,40 @@ function mergeDir(src, dst) {
 }
 
 /**
+ * Recursively collect files from dir and all subdirectories.
+ * Returns array of { rel_path, full_path } where rel_path is relative to base_dir.
+ */
+function collectFilesRecursive(dir, pattern, base_dir = dir) {
+  const entries = [];
+  if (!fs.existsSync(dir)) return entries;
+  for (const dirent of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (dirent.name.startsWith('.')) continue;
+    const full_path = path.join(dir, dirent.name);
+    if (dirent.isDirectory()) {
+      entries.push(...collectFilesRecursive(full_path, pattern, base_dir));
+    } else if (dirent.isFile() && matchesPattern(dirent.name, pattern)) {
+      entries.push({ rel_path: path.relative(base_dir, full_path), full_path });
+    }
+  }
+  return entries;
+}
+
+/**
+ * Remove empty directories bottom-up starting from dir, stopping at (but not removing) stop_at.
+ */
+function removeEmptyDirs(dir, stop_at) {
+  if (!fs.existsSync(dir)) return;
+  for (const dirent of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (dirent.isDirectory()) {
+      removeEmptyDirs(path.join(dir, dirent.name), stop_at);
+    }
+  }
+  if (dir !== stop_at && fs.readdirSync(dir).length === 0) {
+    fs.rmdirSync(dir);
+  }
+}
+
+/**
  * Move files or directories from source_dir to target_dir.
  *
  * @param {object} options
@@ -44,6 +78,7 @@ function mergeDir(src, dst) {
  * @param {'files' | 'directories'} [options.mode='files'] - What to move
  * @param {string} [options.pattern='*'] - Glob-like filter for files ('*', '*.pdf', 'exact.json')
  * @param {number} [options.batch_size=100] - Max entries to move per call
+ * @param {boolean} [options.recursive=false] - Walk subdirectories (files mode only), flatten into target
  * @returns {{ moved_count: number, total_available: number, entries: string[] }}
  */
 export function moveFiles({
@@ -52,11 +87,38 @@ export function moveFiles({
   mode = 'files',
   pattern = '*',
   batch_size = 100,
+  recursive = false,
 } = {}) {
   const empty_result = { moved_count: 0, total_available: 0, entries: [] };
 
   if (!fs.existsSync(source_dir)) {
     return empty_result;
+  }
+
+  // Recursive file collection: walk subdirs, flatten into target
+  if (recursive && mode === 'files') {
+    const all_files = collectFilesRecursive(source_dir, pattern).sort((a, b) =>
+      a.rel_path.localeCompare(b.rel_path),
+    );
+
+    if (all_files.length === 0) return empty_result;
+
+    const batch = all_files.slice(0, batch_size);
+    fs.mkdirSync(target_dir, { recursive: true });
+
+    const entries = [];
+    for (const file of batch) {
+      // Flatten: vendor-a/file.pdf → vendor-a__file.pdf
+      const flat_name = file.rel_path.includes(path.sep)
+        ? file.rel_path.replaceAll(path.sep, '__')
+        : file.rel_path;
+      fs.renameSync(file.full_path, path.join(target_dir, flat_name));
+      entries.push(flat_name);
+    }
+
+    removeEmptyDirs(source_dir, source_dir);
+
+    return { moved_count: entries.length, total_available: all_files.length, entries };
   }
 
   const dirents = fs.readdirSync(source_dir, { withFileTypes: true });

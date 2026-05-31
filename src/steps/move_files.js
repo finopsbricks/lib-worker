@@ -5,7 +5,7 @@ import { bin } from '../workerPaths.js';
 import { renderLocal } from '../renderLocal.js';
 import { z } from 'zod';
 
-/** Split "HI1/output" → ['HI1', 'output'] */
+/** Split "HI1/output" or "CD2/output/PO" → ['HI1', 'output'] / ['CD2', 'output', 'PO'] */
 function parseBin(name) {
   return name.split('/');
 }
@@ -16,6 +16,7 @@ const moveSchema = z.object({
   mode: z.enum(['files', 'directories']).default('files'),
   pattern: z.string().default('*'),
   batch_size: z.number().default(100),
+  recursive: z.boolean().default(false),
 });
 
 export default defineStep({
@@ -45,14 +46,14 @@ export default defineStep({
     const all_entries = [];
 
     for (const move of moves) {
-      const { source_bin, target_bin, mode, pattern, batch_size } = move;
-      const [src_station, src_type] = parseBin(source_bin);
-      const [tgt_station, tgt_type] = parseBin(target_bin);
+      const { source_bin, target_bin, mode, pattern, batch_size, recursive } = move;
+      const [src_station, ...src_rest] = parseBin(source_bin);
+      const [tgt_station, ...tgt_rest] = parseBin(target_bin);
 
       const result = moveFiles({
-        source_dir: bin(src_station, src_type),
-        target_dir: bin(tgt_station, tgt_type),
-        mode, pattern, batch_size,
+        source_dir: bin(src_station, ...src_rest),
+        target_dir: bin(tgt_station, ...tgt_rest),
+        mode, pattern, batch_size, recursive,
       });
 
       total_moved += result.moved_count;
