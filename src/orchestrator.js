@@ -32,9 +32,9 @@ function writeToLocalTemp(work_record_id, filename, content) {
     fs.mkdirSync(dir, { recursive: true });
     const filepath = path.join(dir, filename);
     fs.writeFileSync(filepath, content, 'utf8');
-    console.log(`[Orchestrator] Wrote ${filepath}`);
+    console.log(`[Worker] Wrote ${filepath}`);
   } catch (err) {
-    console.error('[Orchestrator] Failed to write local file:', err.message);
+    console.error('[Worker] Failed to write local file:', err.message);
   }
 }
 
@@ -44,15 +44,15 @@ function writeToLocalTemp(work_record_id, filename, content) {
  */
 export function clearTemp(work_record_id) {
   if (isDev) {
-    console.log(`[Orchestrator] Dev: skipping temp cleanup for ${work_record_id}`);
+    console.log(`[Worker] Dev: skipping temp cleanup for ${work_record_id}`);
     return;
   }
   try {
     const dir = workRecordDir(work_record_id);
     fs.rmSync(dir, { recursive: true, force: true });
-    console.log(`[Orchestrator] Cleared temp: ${dir}`);
+    console.log(`[Worker] Cleared temp: ${dir}`);
   } catch (err) {
-    console.error('[Orchestrator] Failed to clear temp:', err.message);
+    console.error('[Worker] Failed to clear temp:', err.message);
   }
 }
 
@@ -89,14 +89,14 @@ export async function attachDocument(work_record_id, title, content, step_slug) 
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('[Orchestrator] attach-document failed:', response.status, error);
+      console.error('[Worker] attach-document failed:', response.status, error);
       return false;
     }
 
-    console.log(`[Orchestrator] Document attached: "${title}"`);
+    console.log(`[Worker] Document attached: "${title}"`);
     return true;
   } catch (error) {
-    console.error('[Orchestrator] attach-document error:', error.message);
+    console.error('[Worker] attach-document error:', error.message);
     return false;
   }
 }
@@ -115,9 +115,9 @@ export async function attachFile(work_record_id, title, filepath, step_slug) {
     fs.mkdirSync(dir, { recursive: true });
     const dest = path.join(dir, path.basename(filepath));
     fs.copyFileSync(filepath, dest);
-    console.log(`[Orchestrator] Copied ${filepath} → ${dest}`);
+    console.log(`[Worker] Copied ${filepath} → ${dest}`);
   } catch (err) {
-    console.error('[Orchestrator] Failed to copy file to temp:', err.message);
+    console.error('[Worker] Failed to copy file to temp:', err.message);
   }
 
   if (isLocalRun(work_record_id)) return true;
@@ -160,14 +160,14 @@ export async function attachFile(work_record_id, title, filepath, step_slug) {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('[Orchestrator] attach-file failed:', response.status, error);
+      console.error('[Worker] attach-file failed:', response.status, error);
       return false;
     }
 
-    console.log(`[Orchestrator] File attached: "${title}" (${filename})`);
+    console.log(`[Worker] File attached: "${title}" (${filename})`);
     return true;
   } catch (error) {
-    console.error('[Orchestrator] attach-file error:', error.message);
+    console.error('[Worker] attach-file error:', error.message);
     return false;
   }
 }
@@ -318,14 +318,14 @@ export async function attachReport(work_record_id, content) {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('[Orchestrator] attach-report failed:', response.status, error);
+      console.error('[Worker] attach-report failed:', response.status, error);
       return false;
     }
 
-    console.log(`[Orchestrator] Report attached`);
+    console.log(`[Worker] Report attached`);
     return true;
   } catch (error) {
-    console.error('[Orchestrator] attach-report error:', error.message);
+    console.error('[Worker] attach-report error:', error.message);
     return false;
   }
 }

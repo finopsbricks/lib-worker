@@ -143,24 +143,26 @@ async function reportFailed(step_queue_id, error, retryable = true) {
  * @param {function} getHandler
  */
 async function executeTask(task, getHandler) {
-  const { step_queue_id, step } = task;
+  const { step_queue_id, step, work_record } = task;
 
-  console.log(`[Worker] Executing ${step_queue_id}: ${step.slug}`);
+  console.log(`--- wr:${work_record.id} start`);
 
   const handler = getHandler(step.slug);
 
   if (!handler) {
     console.error(`[Worker] No handler for slug: ${step.slug}`);
+    console.log(`--- wr:${work_record.id} failed`);
     await reportFailed(step_queue_id, `Unknown slug: ${step.slug}`, false);
     return;
   }
 
   try {
     const output = await handler(task);
-    console.log(`[Worker] Task ${step_queue_id} completed successfully`);
+    console.log(`--- wr:${work_record.id} done`);
     await reportComplete(step_queue_id, output);
   } catch (error) {
-    console.error(`[Worker] Task ${step_queue_id} failed:`, error.message);
+    console.error(`[Worker] error: ${error.message}`);
+    console.log(`--- wr:${work_record.id} failed`);
     await reportFailed(step_queue_id, error.message, true);
   }
 }

@@ -48,25 +48,25 @@ export async function discoverSteps(steps_dir) {
     try {
       module = await import(pathToFileURL(file_path).href);
     } catch (err) {
-      console.warn(`[discoverSteps] Failed to import ${file_path}: ${err.message}`);
+      console.warn(`[Worker] Failed to import ${file_path}: ${err.message}`);
       continue;
     }
 
     const step = module.default;
 
     if (!isStepDefinition(step)) {
-      console.warn(`[discoverSteps] Skipping ${file_path} — not a step definition`);
+      console.warn(`[Worker] Skipping ${file_path} — not a step definition`);
       continue;
     }
 
     if (step.enabled === false) {
-      console.log(`[discoverSteps] Skipping disabled step: ${step.slug}`);
+      console.log(`[Worker] Skipping disabled step: ${step.slug}`);
       continue;
     }
 
     if (steps[step.slug]) {
       throw new Error(
-        `[discoverSteps] Duplicate slug "${step.slug}" found in ${file_path}`
+        `Duplicate slug "${step.slug}" found in ${file_path}`
       );
     }
 
@@ -74,7 +74,7 @@ export async function discoverSteps(steps_dir) {
     steps[step.slug] = step;
   }
 
-  console.log(`[discoverSteps] Discovered ${Object.keys(steps).length} steps from ${step_files.length} files`);
+  console.log(`[Worker] Discovered ${Object.keys(steps).length} steps from ${step_files.length} files`);
   return steps;
 }
 
