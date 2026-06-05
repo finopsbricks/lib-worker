@@ -54,6 +54,14 @@ export { bin, workRecordDir, workRecordFile } from './workerPaths.js';
 // File utilities
 export { moveFiles } from './files.js';
 
+// Workpiece-mode step helpers (5-bin doing-bin contract)
+export { processWorkpiece } from './utils/workpiece-station.js';
+export { logEvent } from './utils/workpiece-log.js';
+
+// General step-authoring helpers
+export { pooled } from './utils/pooled.js';
+export { stripFrontmatter, countWords } from './utils/markdown.js';
+
 // Shared step definitions
 export { default as moveFilesStep } from './steps/move_files.js';
 export { default as splitBundlesStep } from './steps/split_bundles.js';

@@ -19,7 +19,7 @@ const WORK_RECORDS = path.join(BASE, 'temp', 'work_records');
  * Resolve an assembly-line station bin path.
  *
  * @param {string} station - Process short code (e.g. 'HI1', 'CP1', 'ZP1')
- * @param {string} type - Lifecycle phase ('input', 'output', 'done', 'failed')
+ * @param {string} type - Lifecycle phase ('input', 'doing', 'output', 'done', 'failed')
  * @returns {string} Absolute path to the bin directory (auto-created)
  */
 export function bin(station, ...segments) {
