@@ -55,7 +55,7 @@ export { bin, workRecordDir, workRecordFile } from './workerPaths.js';
 export { moveFiles } from './files.js';
 
 // Workpiece-mode step helpers (5-bin doing-bin contract)
-export { processWorkpiece } from './utils/workpiece-station.js';
+export { processWorkpiece, cleanupOrphanedDoing } from './utils/workpiece-station.js';
 export { logEvent } from './utils/workpiece-log.js';
 
 // General step-authoring helpers

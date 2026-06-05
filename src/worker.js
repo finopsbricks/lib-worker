@@ -7,6 +7,7 @@
 import { validateEnv } from './validate-env.js';
 import { initTemplates } from './utils/template-renderer.js';
 import { buildUserAgent } from './utils/build-user-agent.js';
+import { cleanupOrphanedDoing } from './utils/workpiece-station.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -195,6 +196,14 @@ export async function startWorker({ getHandler, callerUrl, validateOptions = {} 
   console.log('[Worker] Poll interval:', pollInterval, 'ms');
   console.log('[Worker] User-Agent:', worker_user_agent);
   console.log('================================================');
+
+  // Recover from any crash that left a workpiece stranded in a doing/ bin.
+  // Safe to call unconditionally — no-op if no stations or no doing/ bins exist.
+  const orphans = cleanupOrphanedDoing();
+  if (orphans.length > 0) {
+    console.log(`[Worker] Orphan cleanup: discarded ${orphans.length} stranded workpiece(s) from doing/:`);
+    for (const o of orphans) console.log(`[Worker]   - ${o}`);
+  }
 
   // Handle graceful shutdown
   process.on('SIGTERM', () => {

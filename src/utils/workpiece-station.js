@@ -4,6 +4,8 @@ import path from 'node:path';
 import { bin } from '../workerPaths.js';
 import { logEvent } from './workpiece-log.js';
 
+const STATIONS_DIR = path.join(process.cwd(), 'temp', 'stations');
+
 /**
  * @template T
  * @typedef {{ status: 'ok', value: T } | { status: 'failed', error: Error }} RunResult
@@ -53,6 +55,37 @@ export async function processWorkpiece({ station, workpiece_id, body }) {
     promoteToFailed({ wp_input, wp_doing, wp_failed, err });
     return { status: 'failed', error: err };
   }
+}
+
+/**
+ * Sweep every station's `doing/` bin and remove stranded workpieces.
+ *
+ * A workpiece in `doing/` means the worker crashed mid-step. The original
+ * input is still in `input/` (untouched until the success or failure
+ * promotion renames), so the safe recovery is simply to discard the
+ * partial doing copy — the next run reprocesses from input.
+ *
+ * Call once at worker boot, before any processing begins. Skips if the
+ * stations directory doesn't exist yet (first run).
+ *
+ * @returns {string[]} `station/workpiece_id` paths that were cleaned up.
+ */
+export function cleanupOrphanedDoing() {
+  if (!fs.existsSync(STATIONS_DIR)) return [];
+
+  const cleaned = [];
+  for (const station of fs.readdirSync(STATIONS_DIR, { withFileTypes: true })) {
+    if (!station.isDirectory() || station.name.startsWith('.')) continue;
+    const doing_bin = path.join(STATIONS_DIR, station.name, 'doing');
+    if (!fs.existsSync(doing_bin)) continue;
+
+    for (const wp of fs.readdirSync(doing_bin, { withFileTypes: true })) {
+      if (!wp.isDirectory() || wp.name.startsWith('.')) continue;
+      fs.rmSync(path.join(doing_bin, wp.name), { recursive: true, force: true });
+      cleaned.push(`${station.name}/${wp.name}`);
+    }
+  }
+  return cleaned;
 }
 
 /**
