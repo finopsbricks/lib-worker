@@ -15,6 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.24.0] - 2026-06-06
+
+### Added
+
+- **Workpiece Mode** — 5-bin doing-bin contract for stations that process items with per-item bodies. New helpers:
+  - `processWorkpiece({ station, workpiece_id, body })` — wraps the body in input → doing → mutate → output/done on success, or input → failed with log overlay on error
+  - `logEvent(wp, station, event)` — append one event to `{wp}/log.jsonl`; auto-emitted as `station_started` / `station_complete` / `station_failed` by `processWorkpiece`
+  - `cleanupOrphanedDoing()` — discards stranded `doing/{wp}/` directories from a prior crashed run; called automatically by `startWorker` at boot
+- General step-authoring helpers, hoisted from worker repos:
+  - `pooled(items, concurrency, fn)` — bounded-concurrency async pool, preserves input order
+  - `stripFrontmatter(md)` — strip leading YAML frontmatter block
+  - `countWords(text)` — whitespace-split word count
+
+### Changed
+
+- `bin()` JSDoc lists `'doing'` as an allowed bin type alongside the prior four
+- `startWorker` now runs `cleanupOrphanedDoing()` at boot before the polling loop (no-op when no `doing/` bins exist)
+
 ## [0.23.0] - 2026-05-31
 
 ### Added
