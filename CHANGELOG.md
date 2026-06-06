@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.25.0] - 2026-06-06
+
+### Added
+
+- `processWorkpiece` failure capture now writes a structured `error.json` alongside `error.txt` in the failed bin. Any enumerable own properties attached to the thrown Error (e.g. `status`, `statusText`, `headers`, `body`, `cause`) are serialized — making upstream-API failures self-diagnosable. Full body lives in `error.json`; `error.txt` carries a 500-char-truncated preview.
+
+### Changed
+
+- `error.txt` format: now `failed_at`, `Name: message`, one line per extra field, then stack. Previously duplicated the message line above the stack — V8's `err.stack` already begins with `Name: message`, so the duplicate is now stripped.
+
 ## [0.24.0] - 2026-06-06
 
 ### Added

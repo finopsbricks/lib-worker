@@ -106,10 +106,79 @@ function promoteToFailed({ wp_input, wp_doing, wp_failed, err }) {
     fs.copyFileSync(doing_log, path.join(wp_failed, 'log.jsonl'));
   }
 
+  const failed_at = new Date().toISOString();
+  const error_json = serializeError(err, failed_at);
+  fs.writeFileSync(
+    path.join(wp_failed, 'error.json'),
+    JSON.stringify(error_json, null, 2),
+  );
   fs.writeFileSync(
     path.join(wp_failed, 'error.txt'),
-    `${new Date().toISOString()}\n${err.message}\n${err.stack || ''}`,
+    renderErrorText(error_json),
   );
 
   fs.rmSync(wp_doing, { recursive: true, force: true });
+}
+
+// Cap body length in the human-readable view only; full body lives in error.json.
+const ERROR_TXT_BODY_MAX = 500;
+
+/**
+ * Capture an Error in a structured form: standard Error fields plus any own
+ * enumerable properties step code attached (e.g. `status`, `headers`, `body`,
+ * `cause`). Used to produce both `error.json` and `error.txt`.
+ *
+ * @param {Error} err
+ * @param {string} failed_at
+ * @returns {Record<string, unknown>}
+ */
+function serializeError(err, failed_at) {
+  /** @type {Record<string, unknown>} */
+  const out = {
+    failed_at,
+    name: err.name || 'Error',
+    message: err.message,
+    stack: err.stack,
+  };
+  for (const key of Object.getOwnPropertyNames(err)) {
+    if (key === 'name' || key === 'message' || key === 'stack') continue;
+    // @ts-expect-error - dynamic property access on Error
+    out[key] = err[key];
+  }
+  return out;
+}
+
+/** @param {Record<string, unknown>} e */
+function renderErrorText(e) {
+  const lines = [String(e.failed_at), `${e.name}: ${e.message}`];
+  for (const key of Object.keys(e)) {
+    if (['failed_at', 'name', 'message', 'stack', 'body'].includes(key)) continue;
+    lines.push(`${key}: ${formatField(e[key])}`);
+  }
+  if (typeof e.body === 'string' && e.body.length > 0) {
+    lines.push(`body: ${truncate(e.body, ERROR_TXT_BODY_MAX)}`);
+  }
+  if (e.stack) lines.push('', stripStackMessage(String(e.stack), String(e.name), String(e.message)));
+  return lines.join('\n');
+}
+
+// V8's err.stack begins with "Name: message\n    at ...". We render Name +
+// message on its own summary line above, so strip the leading line from
+// stack to avoid duplication.
+/** @param {string} stack @param {string} name @param {string} message */
+function stripStackMessage(stack, name, message) {
+  const header = `${name}: ${message}`;
+  return stack.startsWith(header) ? stack.slice(header.length).replace(/^\n/, '') : stack;
+}
+
+/** @param {unknown} v */
+function formatField(v) {
+  if (v === null || v === undefined) return String(v);
+  if (typeof v === 'string') return v;
+  try { return JSON.stringify(v); } catch { return String(v); }
+}
+
+/** @param {string} s @param {number} max */
+function truncate(s, max) {
+  return s.length <= max ? s : `${s.slice(0, max)}…[+${s.length - max} chars, see error.json]`;
 }
