@@ -1,158 +1,127 @@
 # @fob/lib-worker
 
-Shared worker infrastructure for process engine workers.
+The worker framework for FinOpsBricks customer workers. Provides the polling loop, the `defineStep()` API, orchestrator HTTP integration, and bundled conveyor/PDF steps.
 
-## Documentation
-
-- **API reference and usage guide**: `fde-handbook/libraries/lib-worker.md`
-- **Framework internals**: `platform-handbook/architecture/worker-internals/`
-
-## Installation
+## Install
 
 ```bash
-npm install github:finopsbricks/lib-worker
+npm install @fob/lib-worker@file:../../lib/lib-worker
 ```
 
-Or in `package.json`:
+## Env Vars
 
-```json
-{
-  "dependencies": {
-    "@fob/lib-worker": "github:finopsbricks/lib-worker"
-  }
-}
-```
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `ORCHESTRATOR_API_KEY` | Yes | — | Orchestrator API key (also identifies the org) |
+| `ORCHESTRATOR_API_SECRET` | Yes | — | Orchestrator API secret |
+| `WORKER_LOCATION` | Yes | — | Worker location identifier (sent as `X-Location`; orchestrator dispatches only stations whose `location` matches) |
+| `ORCHESTRATOR_URL` | No | `http://localhost:4005` | Orchestrator server URL |
+| `POLL_INTERVAL_MS` | No | `2000` | Polling frequency (ms) |
+| `NODE_ENV` | No | — | When set to `development`, dev-mode behaviors apply (e.g. `clearTemp` becomes a no-op) |
 
-## Usage
+Path conventions are hard-coded relative to `process.cwd()`:
 
-### Entry Point
-
-```javascript
-import 'dotenv/config';
-import { startWorker } from '@fob/lib-worker';
-import { getHandler } from './steps/index.js';
-
-startWorker({ getHandler });
-```
-
-### Step Implementation
-
-```javascript
-import { statements, attachDocument } from '@fob/lib-worker';
-
-export default async function fetchData(task) {
-  const { step, work_record } = task;
-
-  const statement = await statements.getStatement(work_record.item_snapshot.id);
-
-  await attachDocument(
-    work_record.id,
-    'Statement Data',
-    JSON.stringify(statement, null, 2),
-    step.slug
-  );
-
-  return { statement };
-}
-```
-
-### Using Passthrough API
-
-For workers that need external API access (Zoho Books, QuickBooks, etc.):
-
-```javascript
-import { startWorker } from '@fob/lib-worker';
-import { getHandler } from './steps/index.js';
-
-// Require passthrough env vars
-startWorker({
-  getHandler,
-  validateOptions: { requirePassthrough: true }
-});
-```
-
-```javascript
-import { passthrough } from '@fob/lib-worker';
-
-const invoices = await passthrough.passthroughGet(
-  'zohobooks_connector_id',
-  '/invoices',
-  { status: 'unpaid' }
-);
-```
+- Station bins: `temp/stations/{station}/{type}/`
+- Per-work-record scratch: `temp/work_records/{work_record_id}/`
 
 ## Exports
 
-### Core
+### Core Worker
 
-- `startWorker({ getHandler, validateOptions })` - Start the worker polling loop
-- `validateEnv(options)` - Validate required environment variables
+| Function | Description |
+|---|---|
+| `startWorker({ getHandler, validateOptions? })` | Start the polling loop |
+| `validateEnv(options)` | Validate required env vars at startup |
+| `defineStep({ slug, name, inputSchema, outputSchema, execute })` | Define a step handler with Zod validation |
+| `isStepDefinition(value)` | Type guard for `defineStep` output |
+| `getStepHandler(definition)` | Extract the executable handler from a step definition |
+| `createHandler(definition)` | Wrap a step definition into a handler function |
 
-### Orchestrator
+### Step Discovery
 
-- `attachDocument(work_record_id, title, content, step_slug)` - Attach supporting document
-- `attachReport(work_record_id, content)` - Attach final report
-- `clearTemp(work_record_id)` - Clear temp files (skipped in dev mode)
+| Function | Description |
+|---|---|
+| `discoverSteps(dir)` | Auto-discover step modules in a directory |
+| `createGetHandler(definitions)` | Build a `getHandler` from a definitions map |
 
-### API Clients
+### Orchestrator Integration
 
-- `statements` - Statements app API client
-  - `getStatement(id)`
-  - `updateStatement(id, updates)`
-  - `getAccount(id)`
-  - `getTransactions(params)`
-  - `getAllTransactions(account_id)`
-  - `createWorkRecord(data)`
-  - `updateChecks(data)`
-  - `apiGet(endpoint, params)`
-  - `apiPost(endpoint, body)`
-  - `apiPatch(endpoint, body)`
-  - `apiPut(endpoint, body)`
+| Function | Description |
+|---|---|
+| `attachDocument(work_record_id, title, content, step_slug)` | Attach a supporting markdown document |
+| `attachReport(work_record_id, content)` | Attach the final summary report |
+| `attachFile(work_record_id, title, buffer, filename, step_slug)` | Attach a binary file (Excel, PDF, etc.) |
+| `clearTemp(work_record_id)` | Clear temp files for a work record (no-op in dev mode) |
+| `findItemByExternalId(external_id)` | Look up an item by external ID |
+| `createItem(data)` | Create a new item |
+| `findOrCreateItem(external_id, data)` | Upsert by external ID |
+| `runProcess(process_slug, item)` | Trigger a process run |
 
-- `passthrough` - External API passthrough client
-  - `passthroughGet(connector_id, endpoint, params)`
-  - `passthroughPost(connector_id, endpoint, body)`
-  - `apiGet(endpoint, params)`
-  - `apiPost(endpoint, body)`
+### Template Rendering
 
-### Utilities
+| Function | Description |
+|---|---|
+| `renderTemplate(template_name, data)` | Render an EJS template bundled with lib-worker |
+| `renderLocal(template_path, data)` | Render an EJS template from the worker's own templates dir |
+| `initTemplates(options)` | Initialize template loader (called by `startWorker`) |
 
-- `formatAmount(amount)` - Format amount for display
-- `calculateDailyBalances(options)` - Calculate daily balances from transactions
-- `compareBalances(source, target, options)` - Compare two balance sets
-- `findPeriodOpeningBalance(balances, period_start, default)`
-- `findPeriodClosingBalance(balances, period_end, default)`
-- `generateBalanceReport(options)` - Generate markdown balance report
-- `generateComparisonReport(options)` - Generate markdown comparison report
+### Config + Paths
 
-## Environment Variables
+| Function | Description |
+|---|---|
+| `resolveConfig(step, work_record)` | Resolve a step config from process definition + runtime context |
+| `bin(station, ...segments)` | Resolve a station bin path (auto-creates) |
+| `workRecordDir(work_record_id)` | Per-work-record scratch directory (auto-creates) |
+| `workRecordFile(work_record_id, ...segments)` | Per-work-record file path (auto-creates parents) |
 
-Copy `.env.example` to `.env` and fill in values.
+### File + Step Helpers
 
-### Required
+| Function | Description |
+|---|---|
+| `moveFiles(sources, destination)` | Move files between bins |
+| `processWorkpiece({ task, processOne })` | 5-bin doing-bin contract helper for workpiece-mode steps |
+| `cleanupOrphanedDoing(station)` | Clean up stuck `doing/` entries |
+| `logEvent(work_record_id, event)` | Emit a structured event |
+| `pooled(items, options, fn)` | Run an async function over items with bounded concurrency |
+| `stripFrontmatter(markdown)` | Strip YAML frontmatter |
+| `countWords(text)` | Word count helper |
 
-- `WORKER_SECRET` - Authentication secret for orchestrator
-- `WORKER_ORG` - Organization identifier
-- `FOB_STATEMENTS_API_URL` - Statements app API URL
-- `FOB_STATEMENTS_API_KEY` - Statements app API key
-- `FOB_STATEMENTS_API_SECRET` - Statements app API secret
+### Bundled Steps
 
-### Optional
+| Slug | Export | Description |
+|---|---|---|
+| `lib-worker:move_files` | `moveFilesStep` | Move files between assembly-line bins (supports `moves` array) |
+| `lib-worker:split_bundles` | `splitBundlesStep` | Split multi-page PDF bundles into individual page PDFs |
 
-- `ORCHESTRATOR_URL` - Orchestrator URL (default: http://localhost:3000)
-- `POLL_INTERVAL_MS` - Polling interval (default: 2000)
+## Usage
 
-### Passthrough (if required)
+```javascript
+import 'dotenv/config';
+import { startWorker, createGetHandler, discoverSteps } from '@fob/lib-worker';
 
-- `PASSTHROUGH_URL` - Passthrough API URL
-- `PASSTHROUGH_API_KEY` - Passthrough API key
-- `PASSTHROUGH_API_SECRET` - Passthrough API secret
-- `PASSTHROUGH_ORG_ID` - Organization ID for passthrough
+const definitions = await discoverSteps('./src/steps');
+startWorker({ getHandler: createGetHandler(definitions) });
+```
 
-## Requirements
+```javascript
+import { defineStep, attachDocument } from '@fob/lib-worker';
+import { z } from 'zod';
 
-- Node.js >= 18.0.0
+export default defineStep({
+  slug: 'EX1_fetch_data',
+  name: 'Fetch data',
+  inputSchema: z.object({ account_id: z.string() }),
+  outputSchema: z.object({ row_count: z.number() }),
+  async execute({ input, work_record, step }) {
+    const data = await fetchSomething(input.account_id);
+    await attachDocument(work_record.id, 'Raw data', JSON.stringify(data, null, 2), step.slug);
+    return { row_count: data.length };
+  },
+});
+```
 
-## License
+## See Also
 
-MIT
+- FDE Handbook → `step-patterns/` for step authoring patterns (`defineStep`, schemas, document attachment, error handling)
+- FDE Handbook → `worker-internals/` for `startWorker` lifecycle, handler resolution, task structure
+- Platform Handbook → `architecture/worker-internals/` for framework internals
