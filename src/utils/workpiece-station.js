@@ -24,12 +24,13 @@ const STATIONS_DIR = path.join(process.cwd(), 'temp', 'stations');
  *
  * @template T
  * @param {object} args
- * @param {string} args.station       - Station short code (e.g. 'VM2')
- * @param {string} args.workpiece_id  - Workpiece directory name
+ * @param {string} args.station         - Station short code (e.g. 'VM2')
+ * @param {string} args.workpiece_id    - Workpiece directory name
+ * @param {string} args.work_record_id  - WR id; tagged on every auto-emitted log event
  * @param {(wp_doing: string) => Promise<T>} args.body
  * @returns {Promise<RunResult<T>>}
  */
-export async function processWorkpiece({ station, workpiece_id, body }) {
+export async function processWorkpiece({ station, workpiece_id, work_record_id, body }) {
   const wp_input  = path.join(bin(station, 'input'),  workpiece_id);
   const wp_doing  = path.join(bin(station, 'doing'),  workpiece_id);
   const wp_output = path.join(bin(station, 'output'), workpiece_id);
@@ -37,11 +38,11 @@ export async function processWorkpiece({ station, workpiece_id, body }) {
   const wp_failed = path.join(bin(station, 'failed'), workpiece_id);
 
   fs.cpSync(wp_input, wp_doing, { recursive: true });
-  logEvent(wp_doing, station, 'station_started');
+  logEvent(wp_doing, station, work_record_id, 'station_started');
 
   try {
     const value = await body(wp_doing);
-    logEvent(wp_doing, station, 'station_complete');
+    logEvent(wp_doing, station, work_record_id, 'station_complete');
 
     if (fs.existsSync(wp_output)) {
       fs.rmSync(wp_output, { recursive: true, force: true });
@@ -51,7 +52,7 @@ export async function processWorkpiece({ station, workpiece_id, body }) {
 
     return { status: 'ok', value };
   } catch (err) {
-    logEvent(wp_doing, station, 'station_failed');
+    logEvent(wp_doing, station, work_record_id, 'station_failed');
     promoteToFailed({ wp_input, wp_doing, wp_failed, err });
     return { status: 'failed', error: err };
   }

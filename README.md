@@ -79,9 +79,9 @@ Path conventions are hard-coded relative to `process.cwd()`:
 | Function | Description |
 |---|---|
 | `moveFiles(sources, destination)` | Move files between bins |
-| `processWorkpiece({ task, processOne })` | 5-bin doing-bin contract helper for workpiece-mode steps |
-| `cleanupOrphanedDoing(station)` | Clean up stuck `doing/` entries |
-| `logEvent(work_record_id, event)` | Emit a structured event |
+| `processWorkpiece({ station, workpiece_id, work_record_id, body })` | 5-bin doing-bin contract helper for workpiece-mode steps |
+| `cleanupOrphanedDoing()` | Clean up stuck `doing/` entries |
+| `logEvent(wp, station, work_record_id, event)` | Append a `{ts, station, wr, event}` line to `{wp}/log.jsonl` |
 | `pooled(items, options, fn)` | Run an async function over items with bounded concurrency |
 | `stripFrontmatter(markdown)` | Strip YAML frontmatter |
 | `countWords(text)` | Word count helper |

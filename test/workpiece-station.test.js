@@ -42,6 +42,7 @@ describe('processWorkpiece - failure capture', () => {
     const result = await processWorkpiece({
       station: 'TST',
       workpiece_id: 'wp1',
+      work_record_id: 'wr_test1',
       body: async () => {
         throw Object.assign(new Error('Upstream 502 Bad Gateway'), {
           status: 502,
@@ -75,6 +76,7 @@ describe('processWorkpiece - failure capture', () => {
     await processWorkpiece({
       station: 'TST',
       workpiece_id: 'wp2',
+      work_record_id: 'wr_test2',
       body: async () => {
         throw Object.assign(new Error('boom'), {
           status: 502,
@@ -104,6 +106,7 @@ describe('processWorkpiece - failure capture', () => {
     await processWorkpiece({
       station: 'TST',
       workpiece_id: 'wp3',
+      work_record_id: 'wr_test3',
       body: async () => { throw new Error('plain failure'); },
     });
 
@@ -116,5 +119,55 @@ describe('processWorkpiece - failure capture', () => {
     const txt = fs.readFileSync(path.join(failed_dir, 'error.txt'), 'utf8');
     assert.match(txt, /Error: plain failure/);
     assert.doesNotMatch(txt, /body:/, 'no body line when err.body absent');
+  });
+});
+
+describe('processWorkpiece - log.jsonl', () => {
+  it('tags every auto-emitted event with the work_record_id (success path)', async () => {
+    seedInput('TST', 'wp_ok', { 'pointer.json': '{"id":"wp_ok"}' });
+
+    const result = await processWorkpiece({
+      station: 'TST',
+      workpiece_id: 'wp_ok',
+      work_record_id: 'wr_success_abc',
+      body: async () => ({ ok: true }),
+    });
+
+    assert.equal(result.status, 'ok');
+
+    const log_path = path.join(bin('TST', 'output'), 'wp_ok', 'log.jsonl');
+    const lines = fs.readFileSync(log_path, 'utf8').trim().split('\n').map(JSON.parse);
+
+    assert.equal(lines.length, 2, 'expect station_started + station_complete');
+    assert.deepEqual(
+      lines.map((l) => [l.event, l.wr, l.station]),
+      [
+        ['station_started', 'wr_success_abc', 'TST'],
+        ['station_complete', 'wr_success_abc', 'TST'],
+      ],
+    );
+  });
+
+  it('tags every auto-emitted event with the work_record_id (failure path)', async () => {
+    seedInput('TST', 'wp_fail', { 'pointer.json': '{}' });
+
+    await processWorkpiece({
+      station: 'TST',
+      workpiece_id: 'wp_fail',
+      work_record_id: 'wr_fail_xyz',
+      body: async () => { throw new Error('boom'); },
+    });
+
+    const log_path = path.join(bin('TST', 'failed'), 'wp_fail', 'log.jsonl');
+    const lines = fs.readFileSync(log_path, 'utf8').trim().split('\n').map(JSON.parse);
+
+    assert.equal(lines.length, 2, 'expect station_started + station_failed');
+    assert.deepEqual(
+      lines.map((l) => [l.event, l.wr]),
+      [
+        ['station_started', 'wr_fail_xyz'],
+        ['station_failed', 'wr_fail_xyz'],
+      ],
+    );
   });
 });

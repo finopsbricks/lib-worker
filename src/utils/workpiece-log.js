@@ -10,12 +10,14 @@ import path from 'node:path';
  *
  * @param {string} wp - Workpiece directory; must already exist.
  * @param {string} station - Station short code, e.g. `VM0`, `VM2`.
+ * @param {string} work_record_id - Work record id of the run emitting this event.
  * @param {string} event - Free-form event name, e.g. `station_started`.
  */
-export function logEvent(wp, station, event) {
+export function logEvent(wp, station, work_record_id, event) {
   const line = JSON.stringify({
     ts: new Date().toISOString(),
     station,
+    wr: work_record_id,
     event,
   }) + '\n';
   try {
