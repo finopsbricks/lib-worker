@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.27.0] - 2026-06-18
+
+### Added
+
+- `workpieceOutcomes(station, pending)` — classifies the workpieces a step processed into a `Record<string, "done"|"failed">` by walking the station's `done/` and `failed/` bins. The caller passes the list of workpiece IDs that were in `input/` when the run started (typically the step's existing `pending` array). Workpieces stuck in `doing/` at finalize are omitted (worker bug / future `"interrupted"`). Intended to be embedded in a step's `output` as a `workpieces` field so the orchestrator can later surface per-WR batch yield without a per-step convention.
+
 ## [0.26.0] - 2026-06-18
 
 ### Added

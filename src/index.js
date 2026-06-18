@@ -57,6 +57,7 @@ export { moveFiles } from './files.js';
 // Workpiece-mode step helpers (5-bin doing-bin contract)
 export { processWorkpiece, cleanupOrphanedDoing } from './utils/workpiece-station.js';
 export { logEvent } from './utils/workpiece-log.js';
+export { workpieceOutcomes } from './utils/workpiece-outcomes.js';
 
 // General step-authoring helpers
 export { pooled } from './utils/pooled.js';
