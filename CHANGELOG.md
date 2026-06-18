@@ -9,16 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.26.0] - 2026-06-18
+
+### Added
+
 - `wr` (work record id) is now recorded on every `log.jsonl` event emitted by `processWorkpiece` and `logEvent`. This lets a workpiece's log answer "which WR processed this transition?" — previously only timestamp and station were recorded, so the WR side of the linkage required matching by inference. Older log lines without `wr` remain valid; readers should treat missing `wr` as unknown.
 
 ### Changed
 
 - **Breaking:** `logEvent(wp, station, event)` → `logEvent(wp, station, work_record_id, event)`. All callers must thread the WR id through.
 - **Breaking:** `processWorkpiece({ station, workpiece_id, body })` → `processWorkpiece({ station, workpiece_id, work_record_id, body })`. The new arg is passed to the three auto-emitted lifecycle events. Steps read `work_record.id` from their step context and forward it.
-
-### Fixed
-
-### Removed
 
 ## [0.25.0] - 2026-06-06
 
