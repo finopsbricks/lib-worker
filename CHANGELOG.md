@@ -15,11 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.28.0] - 2026-06-18
+
+### Added
+
+- `attachWorkpieces(work_record_id, workpieces)` — voluntary worker → orchestrator call that records the per-workpiece outcome map on a WR. The map is `workpiece_id → "done" | "failed"`; the orchestrator derives `done_count` / `failed_count` and stores all three. Modelled on `attachReport` / `attachDocument`. Steps build the map from their own knowledge (a `seeded` list for line-heads, a `results` array for body stations) and call this once before `attachReport`. Empty `{}` is valid and represents a no-op run.
+
+### Removed
+
+- **Breaking:** `workpieceOutcomes(station, pending)`. Bin-walking helper from 0.27.0 — replaced by `attachWorkpieces` plus per-step explicit map building. The previous design (nesting `workpieces` inside step `output` and letting the orchestrator lift it) is gone; steps now report directly to a dedicated endpoint.
+
 ## [0.27.0] - 2026-06-18
 
 ### Added
 
-- `workpieceOutcomes(station, pending)` — classifies the workpieces a step processed into a `Record<string, "done"|"failed">` by walking the station's `done/` and `failed/` bins. The caller passes the list of workpiece IDs that were in `input/` when the run started (typically the step's existing `pending` array). Workpieces stuck in `doing/` at finalize are omitted (worker bug / future `"interrupted"`). Intended to be embedded in a step's `output` as a `workpieces` field so the orchestrator can later surface per-WR batch yield without a per-step convention.
+- ~~`workpieceOutcomes(station, pending)`~~ — **superseded in 0.28.0.** Bin-walking helper that classified workpieces into a `Record<string, "done"|"failed">` by walking `done/` and `failed/`. Replaced by per-step explicit map building plus `attachWorkpieces`.
 
 ## [0.26.0] - 2026-06-18
 

@@ -329,3 +329,58 @@ export async function attachReport(work_record_id, content) {
     return false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Workpieces
+// ---------------------------------------------------------------------------
+
+/**
+ * Report the per-workpiece outcome map for a work record.
+ *
+ * The map is `workpiece_id → "done" | "failed"`. The orchestrator stores
+ * it on the WR and derives `done_count` / `failed_count` from the values.
+ * Each step builds the map from its own knowledge (e.g. the `seeded`
+ * array for a line-head, the `results` array for a body station) and
+ * calls this once before `attachReport`.
+ *
+ * Empty `{}` is valid and represents a no-op run.
+ *
+ * @param {string} work_record_id
+ * @param {Record<string, 'done' | 'failed'>} workpieces
+ * @returns {Promise<boolean>} true on success, false on any error (logged)
+ */
+export async function attachWorkpieces(work_record_id, workpieces) {
+  // Write to local temp for inspection during dev / `fob steps run`.
+  writeToLocalTemp(work_record_id, 'workpieces.json', JSON.stringify(workpieces, null, 2));
+
+  if (isLocalRun(work_record_id)) return true;
+
+  const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
+
+  try {
+    const response = await fetch(`${url}/api/worker/attach-workpieces`, {
+      method: 'POST',
+      headers: {
+        ...getBaseHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        work_record_id,
+        workpieces,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('[Worker] attach-workpieces failed:', response.status, error);
+      return false;
+    }
+
+    const count = Object.keys(workpieces).length;
+    console.log(`[Worker] Workpieces attached: ${count}`);
+    return true;
+  } catch (error) {
+    console.error('[Worker] attach-workpieces error:', error.message);
+    return false;
+  }
+}
