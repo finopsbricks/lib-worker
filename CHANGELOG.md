@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.30.1] - 2026-07-15
+
+### Fixed
+
+- `processWorkpiece()` now clears any existing `doing/` and `done/` directory before writing into it, matching the overwrite behavior `output/` and `failed/` already had. Previously a manual retry of a workpiece that had already completed once threw `ENOTEMPTY` renaming `input/` → `done/` (since a prior successful run's `done/{workpiece_id}` still existed), misfiling the retry as a station failure. A stranded `doing/` copy from a crash mid-run is now also blown away on the next attempt instead of merging via `cpSync`.
+
 ## [0.28.0] - 2026-06-18
 
 ### Added
