@@ -122,6 +122,72 @@ describe('processWorkpiece - failure capture', () => {
   });
 });
 
+describe('processWorkpiece - rerun overwrite', () => {
+  it('overwrites a prior done/ copy on manual retry instead of failing with ENOTEMPTY', async () => {
+    seedInput('TST', 'wp_retry', { 'pointer.json': '{"id":"wp_retry"}' });
+
+    const first = await processWorkpiece({
+      station: 'TST',
+      workpiece_id: 'wp_retry',
+      work_record_id: 'wr_retry_1',
+      body: async () => ({ ok: true }),
+    });
+    assert.equal(first.status, 'ok');
+
+    // Simulate a manual retry: re-seed input (as if copied back from done/),
+    // leaving the earlier run's done/wp_retry in place.
+    seedInput('TST', 'wp_retry', { 'pointer.json': '{"id":"wp_retry"}' });
+
+    const second = await processWorkpiece({
+      station: 'TST',
+      workpiece_id: 'wp_retry',
+      work_record_id: 'wr_retry_2',
+      body: async () => ({ ok: true }),
+    });
+
+    assert.equal(second.status, 'ok', 'retry must succeed, not be misfiled to failed/ on ENOTEMPTY');
+    assert.ok(fs.existsSync(path.join(bin('TST', 'done'), 'wp_retry')));
+    assert.ok(!fs.existsSync(bin('TST', 'input') && path.join(bin('TST', 'input'), 'wp_retry')));
+  });
+});
+
+describe('processWorkpiece - stranded doing/ recovery', () => {
+  it('overwrites a stranded doing/ copy (crash mid-run) and reprocesses cleanly from input', async () => {
+    seedInput('TST', 'wp_crash', { 'pointer.json': '{"id":"wp_crash"}' });
+
+    // Simulate a stranded doing/ dir from a prior crashed attempt: stale
+    // log.jsonl plus a leftover file that no longer exists in input/.
+    const wp_doing = path.join(bin('TST', 'doing'), 'wp_crash');
+    fs.mkdirSync(wp_doing, { recursive: true });
+    fs.writeFileSync(path.join(wp_doing, 'log.jsonl'), '{"event":"station_started","wr":"wr_stale"}\n');
+    fs.writeFileSync(path.join(wp_doing, 'stale-artifact.md'), 'leftover from crashed run');
+
+    const result = await processWorkpiece({
+      station: 'TST',
+      workpiece_id: 'wp_crash',
+      work_record_id: 'wr_crash_retry',
+      body: async (wp_doing_path) => {
+        assert.ok(!fs.existsSync(path.join(wp_doing_path, 'stale-artifact.md')), 'stale doing/ content must not survive into the fresh run');
+        return { ok: true };
+      },
+    });
+
+    assert.equal(result.status, 'ok');
+
+    const log_path = path.join(bin('TST', 'output'), 'wp_crash', 'log.jsonl');
+    const lines = fs.readFileSync(log_path, 'utf8').trim().split('\n').map(JSON.parse);
+    assert.deepEqual(
+      lines.map((l) => [l.event, l.wr]),
+      [
+        ['station_started', 'wr_crash_retry'],
+        ['station_complete', 'wr_crash_retry'],
+      ],
+      'log.jsonl must be fresh, not the stale overlay from the crashed attempt',
+    );
+    assert.ok(!fs.existsSync(path.join(bin('TST', 'output'), 'wp_crash', 'stale-artifact.md')));
+  });
+});
+
 describe('processWorkpiece - log.jsonl', () => {
   it('tags every auto-emitted event with the work_record_id (success path)', async () => {
     seedInput('TST', 'wp_ok', { 'pointer.json': '{"id":"wp_ok"}' });

@@ -14,11 +14,14 @@ const STATIONS_DIR = path.join(process.cwd(), 'temp', 'stations');
 /**
  * Run a per-workpiece step under the 5-bin doing-bin contract.
  *
- *   1. Copy input/{workpiece_id}/ → doing/{workpiece_id}/ (full content)
+ *   1. Copy input/{workpiece_id}/ → doing/{workpiece_id}/ (full content,
+ *      replacing any stranded doing/ copy left by a crash mid-run — a fresh
+ *      start always reprocesses from input, never resumes doing/)
  *   2. Emit station_started to doing/log.jsonl
  *   3. Call body(wp_doing) — mutates the doing-bin working copy, returns value
  *   4a. Success: emit station_complete, doing → output (replacing any prior
- *       partial), input → done
+ *       partial), input → done (replacing any prior done copy — a manual
+ *       retry re-processes a workpiece already sitting in done/)
  *   4b. Failure: emit station_failed, input → failed (pristine), overlay log
  *       from doing, write error.txt, rm -rf doing
  *
@@ -37,6 +40,9 @@ export async function processWorkpiece({ station, workpiece_id, work_record_id, 
   const wp_done   = path.join(bin(station, 'done'),   workpiece_id);
   const wp_failed = path.join(bin(station, 'failed'), workpiece_id);
 
+  if (fs.existsSync(wp_doing)) {
+    fs.rmSync(wp_doing, { recursive: true, force: true });
+  }
   fs.cpSync(wp_input, wp_doing, { recursive: true });
   logEvent(wp_doing, station, work_record_id, 'station_started');
 
@@ -48,6 +54,10 @@ export async function processWorkpiece({ station, workpiece_id, work_record_id, 
       fs.rmSync(wp_output, { recursive: true, force: true });
     }
     fs.renameSync(wp_doing, wp_output);
+
+    if (fs.existsSync(wp_done)) {
+      fs.rmSync(wp_done, { recursive: true, force: true });
+    }
     fs.renameSync(wp_input, wp_done);
 
     return { status: 'ok', value };
