@@ -67,3 +67,7 @@ export { stripFrontmatter, countWords } from './utils/markdown.js';
 export { default as moveFilesStep } from './steps/move_files.js';
 export { default as splitBundlesStep } from './steps/split_bundles.js';
 
+// Bin-watch station triggering (event-driven alternative/addition to cron
+// for downstream conveyor stations — see Stations.watch_enabled)
+export { startBinWatcher } from './bin-watcher.js';
+

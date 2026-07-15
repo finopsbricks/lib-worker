@@ -186,7 +186,7 @@ function getBaseHeaders() {
   return headers;
 }
 
-async function orchestratorGet(urlPath) {
+export async function orchestratorGet(urlPath) {
   const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
   const res = await fetch(`${url}${urlPath}`, {
     headers: getBaseHeaders(),
@@ -198,7 +198,7 @@ async function orchestratorGet(urlPath) {
   return res.json();
 }
 
-async function orchestratorPost(urlPath, body) {
+export async function orchestratorPost(urlPath, body) {
   const url = process.env.ORCHESTRATOR_URL || 'http://localhost:3000';
   const res = await fetch(`${url}${urlPath}`, {
     method: 'POST',
