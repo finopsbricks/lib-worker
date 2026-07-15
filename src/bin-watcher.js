@@ -11,7 +11,7 @@
 
 import { readdir } from 'node:fs/promises';
 import { bin } from './workerPaths.js';
-import { resolveWatchedStations } from './utils/watched-stations.js';
+import { resolveWatchedStations, findUnwatchedConveyorStations } from './utils/watched-stations.js';
 import { hasInFlightRun, triggerStationRun } from './utils/bin-watch-trigger.js';
 
 const DEFAULT_INTERVAL_MS = 10_000;
@@ -72,7 +72,9 @@ export async function checkAndTrigger(watched) {
 
 /**
  * Start the bin-watch loop: resolves the watch-list once, then re-checks it
- * on an interval.
+ * on an interval. Also warns once at startup about any conveyor station
+ * (has a move_files step0) that's neither cron'd nor watch_enabled — see
+ * findUnwatchedConveyorStations() for why this exists.
  *
  * @param {object} [opts]
  * @param {number} [opts.intervalMs]
@@ -81,6 +83,13 @@ export async function checkAndTrigger(watched) {
 export async function startBinWatcher(opts = {}) {
   const interval_ms = opts.intervalMs ?? DEFAULT_INTERVAL_MS;
   const watched = await resolveWatchedStations();
+
+  const unwatched = await findUnwatchedConveyorStations();
+  if (unwatched.length > 0) {
+    console.warn(
+      `[bin-watcher] ${unwatched.length} conveyor station(s) have neither schedule_enabled nor watch_enabled — nothing triggers them: ${unwatched.join(', ')}`,
+    );
+  }
 
   const timer = setInterval(() => {
     checkAndTrigger(watched).catch(err => {

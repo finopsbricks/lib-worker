@@ -26,22 +26,35 @@ import path from 'node:path';
  */
 
 /**
- * @returns {Promise<WatchedStation[]>}
+ * Read every station JSON at this worker's own location.
+ * @returns {Promise<{ file: string, config: object }[]>}
  */
-export async function resolveWatchedStations() {
+async function readLocationStations() {
   const stations_dir = path.join(process.cwd(), '.orchestrator', 'stations');
   const worker_location = process.env.WORKER_LOCATION;
   const files = await readdir(stations_dir);
-  const watched = [];
+  const result = [];
 
   for (const file of files) {
     if (!file.endsWith('.json')) continue;
-
     const raw = await readFile(path.join(stations_dir, file), 'utf8');
     const config = JSON.parse(raw);
-
-    if (config.watch_enabled !== true) continue;
     if (config.location !== worker_location) continue;
+    result.push({ file, config });
+  }
+
+  return result;
+}
+
+/**
+ * @returns {Promise<WatchedStation[]>}
+ */
+export async function resolveWatchedStations() {
+  const stations = await readLocationStations();
+  const watched = [];
+
+  for (const { file, config } of stations) {
+    if (config.watch_enabled !== true) continue;
 
     if (!config.id) {
       throw new Error(`watched-stations: station "${config.short_code}" (${file}) has no id — push it live first`);
@@ -71,4 +84,35 @@ export async function resolveWatchedStations() {
   }
 
   return watched;
+}
+
+/**
+ * Short_codes of downstream conveyor stations (has a `move_files` step0 —
+ * i.e. is structurally eligible for bin-watch) that currently have NEITHER
+ * `schedule_enabled` NOR `watch_enabled` set — nothing will ever trigger
+ * them. This is exactly the gap that let BK-SR sit fully dormant and
+ * unnoticed for a while: nothing forced anyone to notice it was eligible.
+ * Enabled-but-off-on-purpose stations (`is_enabled: false`) and archived
+ * stations are not flagged — those are already unambiguous.
+ *
+ * Informational only — this never throws, just reports.
+ *
+ * @returns {Promise<string[]>}
+ */
+export async function findUnwatchedConveyorStations() {
+  const stations = await readLocationStations();
+  const unwatched = [];
+
+  for (const { config } of stations) {
+    if (config.is_enabled === false) continue;
+    if (config.archived_at) continue;
+    if (config.schedule_enabled === true || config.watch_enabled === true) continue;
+
+    const first_step = config.steps?.[0];
+    if (first_step?.slug !== 'lib-worker:move_files') continue;
+
+    unwatched.push(config.short_code);
+  }
+
+  return unwatched;
 }

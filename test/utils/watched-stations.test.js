@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-const { resolveWatchedStations } = await import('../../src/utils/watched-stations.js');
+const { resolveWatchedStations, findUnwatchedConveyorStations } = await import('../../src/utils/watched-stations.js');
 
 let tmp_dir;
 let original_cwd;
@@ -126,5 +126,107 @@ describe('resolveWatchedStations', () => {
     });
 
     await assert.rejects(() => resolveWatchedStations(), /no move_files step0 with source_bin to watch/);
+  });
+});
+
+describe('findUnwatchedConveyorStations', () => {
+  beforeEach(() => {
+    tmp_dir = fs.mkdtempSync(path.join(os.tmpdir(), 'watched-stations-'));
+    original_cwd = process.cwd();
+    original_location = process.env.WORKER_LOCATION;
+    process.chdir(tmp_dir);
+    process.env.WORKER_LOCATION = 'alex-laptop1';
+  });
+
+  afterEach(() => {
+    process.chdir(original_cwd);
+    if (original_location === undefined) delete process.env.WORKER_LOCATION;
+    else process.env.WORKER_LOCATION = original_location;
+    fs.rmSync(tmp_dir, { recursive: true, force: true });
+  });
+
+  it('flags a conveyor station with neither schedule_enabled nor watch_enabled', async () => {
+    writeStationFile('BK-SR1__check_and_propose.json', {
+      id: 'bksr1id',
+      short_code: 'BK-SR1',
+      location: 'alex-laptop1',
+      is_enabled: true,
+      schedule_enabled: false,
+      steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'BK-SR0/output' } }],
+    });
+
+    const unwatched = await findUnwatchedConveyorStations();
+
+    assert.deepEqual(unwatched, ['BK-SR1']);
+  });
+
+  it('does not flag a station with schedule_enabled true', async () => {
+    writeStationFile('M1__capture_audio.json', {
+      id: 'm1id',
+      short_code: 'M1',
+      location: 'alex-laptop1',
+      schedule_enabled: true,
+      steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'M0/output' } }],
+    });
+
+    assert.deepEqual(await findUnwatchedConveyorStations(), []);
+  });
+
+  it('does not flag a station with watch_enabled true', async () => {
+    writeStationFile('CAR1__capture_listing.json', {
+      id: 'car1id',
+      short_code: 'CAR1',
+      location: 'alex-laptop1',
+      schedule_enabled: false,
+      watch_enabled: true,
+      steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'CAR0/output' } }],
+    });
+
+    assert.deepEqual(await findUnwatchedConveyorStations(), []);
+  });
+
+  it('does not flag a line-head (no move_files step0)', async () => {
+    writeStationFile('CAR0__discover_urls.json', {
+      id: 'car0id',
+      short_code: 'CAR0',
+      location: 'alex-laptop1',
+      schedule_enabled: true,
+      steps: [{ slug: 'CAR0_01_discover_urls', config: {} }],
+    });
+
+    assert.deepEqual(await findUnwatchedConveyorStations(), []);
+  });
+
+  it('does not flag a station that is explicitly disabled or archived', async () => {
+    writeStationFile('AV1__verify_balance.json', {
+      id: 'av1id',
+      short_code: 'AV1',
+      location: 'alex-laptop1',
+      is_enabled: false,
+      schedule_enabled: false,
+      steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'AV0/output' } }],
+    });
+    writeStationFile('SV1__fetch_and_check.json', {
+      id: 'sv1id',
+      short_code: 'SV1',
+      location: 'alex-laptop1',
+      archived_at: '2026-01-01T00:00:00.000Z',
+      schedule_enabled: false,
+      steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'SV0/output' } }],
+    });
+
+    assert.deepEqual(await findUnwatchedConveyorStations(), []);
+  });
+
+  it('ignores stations at a different location', async () => {
+    writeStationFile('VM2__extract_apple_transcript.json', {
+      id: 'vm2id',
+      short_code: 'VM2',
+      location: 'alex-laptop',
+      schedule_enabled: false,
+      steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'VM0/output' } }],
+    });
+
+    assert.deepEqual(await findUnwatchedConveyorStations(), []);
   });
 });
