@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.31.0] - 2026-08-12
+
+### Added
+
+- Workers now announce a graceful shutdown. `SIGTERM`/`SIGINT` POST to `/api/worker/disconnect` before exiting, so the orchestrator ends the session immediately instead of leaving it `active` until the 5-minute expiry sweep notices. This matters because a location may only have one active worker session: without it, a restarted worker is refused by its own stale session for up to five minutes. Best-effort by design — 3s timeout, all errors swallowed, so shutdown can never hang on an unreachable orchestrator.
+- Workers honour an orchestrator-closed session. When a poll response carries `session_closed`, the worker stops polling and exits 0 — a process manager may then restart it, and it registers a fresh session. This is what lets the orchestrator free a location or remotely stop a worker. Requires an orchestrator new enough to send the field; older ones simply never do, so behaviour is unchanged against them.
+
 ## [0.30.1] - 2026-07-15
 
 ### Fixed

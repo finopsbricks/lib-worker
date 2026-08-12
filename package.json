@@ -1,6 +1,6 @@
 {
   "name": "@fob/lib-worker",
-  "version": "0.30.1",
+  "version": "0.31.0",
   "description": "Shared worker infrastructure for process engine workers",
   "type": "module",
   "main": "src/index.js",
