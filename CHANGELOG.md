@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.32.0] - 2026-08-12
+
+### Added
+
+- Workers exit on a location conflict. The orchestrator now enforces one active session per `(org, location)` and refuses a second worker with `409 LOCATION_IN_USE`; the worker prints the orchestrator's message — which names the incumbent session and host — once, then exits 1. Retrying cannot succeed, so the previous behaviour would have logged the same refusal every poll interval forever. The exit code is deliberately non-zero: exiting 0 would have a process manager restart into an immediate re-refusal, spinning quietly, whereas a failing restart loop is a visible signal that the worker needs stopping or relocating.
+
 ## [0.31.0] - 2026-08-12
 
 ### Added
