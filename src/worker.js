@@ -20,6 +20,9 @@ let session_id = null;
 /** Set when the orchestrator reports our session was deliberately closed */
 let session_closed = false;
 
+/** Set when another worker already holds our location — retrying cannot help */
+let location_conflict = false;
+
 /** Get the current session ID (for use by orchestrator.js helpers) */
 export function getSessionId() {
   return session_id;
@@ -53,6 +56,22 @@ async function pollForTask() {
 
     if (!response.ok) {
       const error = await response.text();
+
+      // 409 — another worker already holds this location. Retrying cannot help
+      // (the orchestrator allows one worker per location), so say why once and
+      // exit rather than logging the same refusal every poll interval forever.
+      if (response.status === 409) {
+        let message = error;
+        try {
+          message = JSON.parse(error)?.error?.message || error;
+        } catch {
+          // Non-JSON body — fall back to the raw text.
+        }
+        console.error(`[Worker] ${message}`);
+        location_conflict = true;
+        return null;
+      }
+
       console.error('[Worker] Poll failed:', response.status, error);
       return null;
     }
@@ -270,6 +289,17 @@ export async function startWorker({ getHandler, callerUrl, validateOptions = {} 
     if (session_closed) {
       console.log('[Worker] Session was closed by the orchestrator. Exiting.');
       process.exit(0);
+    }
+
+    // Another worker owns this location. Exit non-zero: a restart would just be
+    // refused again, so we want the process to stay down (and a supervisor's
+    // restart loop to be visibly failing) rather than spin quietly.
+    if (location_conflict) {
+      console.error(
+        `[Worker] Location '${process.env.WORKER_LOCATION}' is served by another worker. ` +
+        'Stop that worker, or set a different WORKER_LOCATION for this one. Exiting.'
+      );
+      process.exit(1);
     }
 
     if (task) {
