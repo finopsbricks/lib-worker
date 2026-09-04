@@ -7,13 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+## [0.33.0] - 2026-09-05
 
 ### Changed
+- **BREAKING:** the bin-watcher decides which stations are "at this location" through the station's **line**, not a per-station `location`. `watched-stations.js` loads `.orchestrator/lines/*.json` (`{ code, name, location }`, pulled by `fob-orc lines pull`), keeps the lines whose `location` equals `WORKER_LOCATION`, and then keeps only stations whose `line` code is in that set. Station files no longer carry `location` at all — the orchestrator dropped the column ([D3](../../apps/orchestrator.finopsbricks.com/docs/decisions/0003-lines-are-a-core-object.md)). A worker repo that has not been re-pulled has no `.orchestrator/lines/` and **fails at boot** with a message naming the command to run, rather than silently watching nothing. A station file with no `line` is likewise a boot error.
 
-### Fixed
-
-### Removed
+### Migration
+- In every worker repo: bump to this version, then `fob-orc lines pull --all && fob-orc stations pull --all`, commit, restart.
 
 ## [0.32.0] - 2026-08-12
 

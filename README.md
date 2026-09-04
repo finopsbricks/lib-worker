@@ -14,7 +14,7 @@ npm install @fob/lib-worker@file:../../lib/lib-worker
 |---|---|---|---|
 | `ORCHESTRATOR_API_KEY` | Yes | — | Orchestrator API key (also identifies the org) |
 | `ORCHESTRATOR_API_SECRET` | Yes | — | Orchestrator API secret |
-| `WORKER_LOCATION` | Yes | — | Worker location identifier (sent as `X-Location`; orchestrator dispatches only stations whose `location` matches) |
+| `WORKER_LOCATION` | Yes | — | Worker location identifier (sent as `X-Location`; orchestrator dispatches only stations whose **line's** `location` matches — lines own the location) |
 | `ORCHESTRATOR_URL` | No | `http://localhost:4005` | Orchestrator server URL |
 | `POLL_INTERVAL_MS` | No | `2000` | Polling frequency (ms) |
 | `NODE_ENV` | No | — | When set to `development`, dev-mode behaviors apply (e.g. `clearTemp` becomes a no-op) |

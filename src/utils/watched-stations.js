@@ -1,14 +1,17 @@
 /**
  * Resolves which stations a worker should bin-watch trigger, by reading the
- * calling worker's own .orchestrator/stations/*.json files directly (the
- * same files `fob stations push/pull` keep in sync with the orchestrator).
+ * calling worker's own .orchestrator/ files directly (the same files
+ * `fob-orc lines/stations pull` keep in sync with the orchestrator).
  *
- * Eligibility is `watch_enabled === true` on the station itself — a real
- * orchestrator-side column (Stations.watch_enabled), not a hardcoded list —
- * AND `location === process.env.WORKER_LOCATION`, since a single worker
- * repo's station folder can span multiple physical worker locations (a
- * worker process only ever executes tasks for its own location, and must
- * not bin-watch-trigger stations meant for a different one).
+ * A line owns the worker location (orchestrator D3): `.orchestrator/lines/*.json`
+ * carries `{ code, location }`, and every station file names its line by code.
+ * A station is "at this location" when its line's location equals
+ * `process.env.WORKER_LOCATION`. A single worker repo may hold lines at several
+ * locations, and a worker process only ever executes tasks for its own — so it
+ * must not bin-watch-trigger stations meant for a different one.
+ *
+ * Eligibility to be watched is `watch_enabled === true` on the station itself —
+ * a real orchestrator-side column (Stations.watch_enabled), not a hardcoded list.
  */
 
 import { readFile, readdir } from 'node:fs/promises';
@@ -26,23 +29,70 @@ import path from 'node:path';
  */
 
 /**
- * Read every station JSON at this worker's own location.
+ * @param {string} dir
+ * @returns {Promise<{ file: string, config: any }[]>}
+ */
+async function readJsonDir(dir) {
+  const files = await readdir(dir);
+  const result = [];
+  for (const file of files) {
+    if (!file.endsWith('.json')) continue;
+    const raw = await readFile(path.join(dir, file), 'utf8');
+    result.push({ file, config: JSON.parse(raw) });
+  }
+  return result;
+}
+
+/**
+ * Codes of the lines served by this worker's location.
+ *
+ * A missing `.orchestrator/lines/` is an error, not "no lines": every station
+ * needs a line to be routable, so a repo without line files has not been
+ * pulled since lines became an object. Fail at boot rather than silently
+ * watch nothing.
+ *
+ * @returns {Promise<Set<string>>}
+ */
+async function readLocalLineCodes() {
+  const lines_dir = path.join(process.cwd(), '.orchestrator', 'lines');
+  const worker_location = process.env.WORKER_LOCATION;
+
+  let lines;
+  try {
+    lines = await readJsonDir(lines_dir);
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+    throw new Error(
+      `watched-stations: ${lines_dir} does not exist. Lines own the worker location now — ` +
+        'run `fob-orc lines pull --all && fob-orc stations pull --all` in this repo.',
+    );
+  }
+
+  const codes = new Set();
+  for (const { file, config } of lines) {
+    if (!config.code) throw new Error(`watched-stations: line file ${file} has no code`);
+    if (config.location === worker_location) codes.add(config.code);
+  }
+  return codes;
+}
+
+/**
+ * Read every station JSON whose line is served by this worker's location.
  * @returns {Promise<{ file: string, config: object }[]>}
  */
 async function readLocationStations() {
   const stations_dir = path.join(process.cwd(), '.orchestrator', 'stations');
-  const worker_location = process.env.WORKER_LOCATION;
-  const files = await readdir(stations_dir);
-  const result = [];
+  const local_line_codes = await readLocalLineCodes();
+  const stations = await readJsonDir(stations_dir);
 
-  for (const file of files) {
-    if (!file.endsWith('.json')) continue;
-    const raw = await readFile(path.join(stations_dir, file), 'utf8');
-    const config = JSON.parse(raw);
-    if (config.location !== worker_location) continue;
+  const result = [];
+  for (const { file, config } of stations) {
+    if (!config.line) {
+      throw new Error(`watched-stations: station "${config.short_code}" (${file}) has no line`);
+    }
+    if (!local_line_codes.has(config.line)) continue;
     result.push({ file, config });
   }
-
   return result;
 }
 

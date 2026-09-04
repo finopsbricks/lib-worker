@@ -20,6 +20,25 @@ function writeStationFile(filename, config) {
   fs.writeFileSync(path.join(dir, filename), JSON.stringify(config));
 }
 
+/**
+ * @param {string} code
+ * @param {string} location
+ */
+function writeLineFile(code, location) {
+  const dir = path.join(tmp_dir, '.orchestrator', 'lines');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, `${code}.json`), JSON.stringify({ code, name: code, location }));
+}
+
+/** The lines every test starts from: two at this worker's location, one elsewhere. */
+function writeDefaultLines() {
+  writeLineFile('CAR', 'alex-laptop1');
+  writeLineFile('AV', 'alex-laptop1');
+  writeLineFile('M', 'alex-laptop1');
+  writeLineFile('BK-SR', 'alex-laptop1');
+  writeLineFile('VM', 'alex-laptop');
+}
+
 describe('resolveWatchedStations', () => {
   beforeEach(() => {
     tmp_dir = fs.mkdtempSync(path.join(os.tmpdir(), 'watched-stations-'));
@@ -27,6 +46,7 @@ describe('resolveWatchedStations', () => {
     original_location = process.env.WORKER_LOCATION;
     process.chdir(tmp_dir);
     process.env.WORKER_LOCATION = 'alex-laptop1';
+    writeDefaultLines();
   });
 
   afterEach(() => {
@@ -40,7 +60,7 @@ describe('resolveWatchedStations', () => {
     writeStationFile('CAR1__capture_listing.json', {
       id: 'maaopXWtoU7I',
       short_code: 'CAR1',
-      location: 'alex-laptop1',
+      line: 'CAR',
       watch_enabled: true,
       steps: [
         { slug: 'lib-worker:move_files', config: { source_bin: 'CAR0/output' } },
@@ -59,14 +79,14 @@ describe('resolveWatchedStations', () => {
     writeStationFile('AV1__verify_balance.json', {
       id: 'av1id',
       short_code: 'AV1',
-      location: 'alex-laptop1',
+      line: 'AV',
       watch_enabled: false,
       steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'AV0/output' } }],
     });
     writeStationFile('M0__discover_urls.json', {
       id: 'm0id',
       short_code: 'M0',
-      location: 'alex-laptop1',
+      line: 'M',
       steps: [{ slug: 'M0_01_discover_urls', config: {} }],
     });
 
@@ -75,11 +95,11 @@ describe('resolveWatchedStations', () => {
     assert.deepEqual(watched, []);
   });
 
-  it('skips watch_enabled stations at a different location', async () => {
+  it('skips watch_enabled stations whose line is at a different location', async () => {
     writeStationFile('VM2__extract_apple_transcript.json', {
       id: 'vm2id',
       short_code: 'VM2',
-      location: 'alex-laptop',
+      line: 'VM',
       watch_enabled: true,
       steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'VM0/output' } }],
     });
@@ -93,7 +113,7 @@ describe('resolveWatchedStations', () => {
     writeStationFile('BK-SR2__apply_approved_period.json', {
       id: 'I7ikKYcDo7XH',
       short_code: 'BK-SR2',
-      location: 'alex-laptop1',
+      line: 'BK-SR',
       watch_enabled: true,
       steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'BK-SR1/output/approved' } }],
     });
@@ -108,7 +128,7 @@ describe('resolveWatchedStations', () => {
   it('throws when a watch_enabled station has no id (not pushed live yet)', async () => {
     writeStationFile('CAR1__capture_listing.json', {
       short_code: 'CAR1',
-      location: 'alex-laptop1',
+      line: 'CAR',
       watch_enabled: true,
       steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'CAR0/output' } }],
     });
@@ -116,11 +136,47 @@ describe('resolveWatchedStations', () => {
     await assert.rejects(() => resolveWatchedStations(), /has no id — push it live first/);
   });
 
+  it('throws when .orchestrator/lines/ is missing — the repo has not been pulled since lines became an object', async () => {
+    fs.rmSync(path.join(tmp_dir, '.orchestrator', 'lines'), { recursive: true, force: true });
+    writeStationFile('CAR1__capture_listing.json', {
+      id: 'maaopXWtoU7I',
+      short_code: 'CAR1',
+      line: 'CAR',
+      watch_enabled: true,
+      steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'CAR0/output' } }],
+    });
+
+    await assert.rejects(() => resolveWatchedStations(), /lines pull --all/);
+  });
+
+  it('throws when a station has no line', async () => {
+    writeStationFile('CAR1__capture_listing.json', {
+      id: 'maaopXWtoU7I',
+      short_code: 'CAR1',
+      watch_enabled: true,
+      steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'CAR0/output' } }],
+    });
+
+    await assert.rejects(() => resolveWatchedStations(), /has no line/);
+  });
+
+  it('skips a station whose line has no local line file (not served here)', async () => {
+    writeStationFile('ZZ1__unknown.json', {
+      id: 'zz1id',
+      short_code: 'ZZ1',
+      line: 'ZZ',
+      watch_enabled: true,
+      steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'ZZ0/output' } }],
+    });
+
+    assert.deepEqual(await resolveWatchedStations(), []);
+  });
+
   it('throws when a watch_enabled station has no move_files step0', async () => {
     writeStationFile('CAR1__capture_listing.json', {
       id: 'maaopXWtoU7I',
       short_code: 'CAR1',
-      location: 'alex-laptop1',
+      line: 'CAR',
       watch_enabled: true,
       steps: [{ slug: 'CAR1_01_capture_listing', config: {} }],
     });
@@ -136,6 +192,7 @@ describe('findUnwatchedConveyorStations', () => {
     original_location = process.env.WORKER_LOCATION;
     process.chdir(tmp_dir);
     process.env.WORKER_LOCATION = 'alex-laptop1';
+    writeDefaultLines();
   });
 
   afterEach(() => {
@@ -149,7 +206,7 @@ describe('findUnwatchedConveyorStations', () => {
     writeStationFile('BK-SR1__check_and_propose.json', {
       id: 'bksr1id',
       short_code: 'BK-SR1',
-      location: 'alex-laptop1',
+      line: 'BK-SR',
       is_enabled: true,
       schedule_enabled: false,
       steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'BK-SR0/output' } }],
@@ -164,7 +221,7 @@ describe('findUnwatchedConveyorStations', () => {
     writeStationFile('M1__capture_audio.json', {
       id: 'm1id',
       short_code: 'M1',
-      location: 'alex-laptop1',
+      line: 'M',
       schedule_enabled: true,
       steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'M0/output' } }],
     });
@@ -176,7 +233,7 @@ describe('findUnwatchedConveyorStations', () => {
     writeStationFile('CAR1__capture_listing.json', {
       id: 'car1id',
       short_code: 'CAR1',
-      location: 'alex-laptop1',
+      line: 'CAR',
       schedule_enabled: false,
       watch_enabled: true,
       steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'CAR0/output' } }],
@@ -189,7 +246,7 @@ describe('findUnwatchedConveyorStations', () => {
     writeStationFile('CAR0__discover_urls.json', {
       id: 'car0id',
       short_code: 'CAR0',
-      location: 'alex-laptop1',
+      line: 'CAR',
       schedule_enabled: true,
       steps: [{ slug: 'CAR0_01_discover_urls', config: {} }],
     });
@@ -201,7 +258,7 @@ describe('findUnwatchedConveyorStations', () => {
     writeStationFile('AV1__verify_balance.json', {
       id: 'av1id',
       short_code: 'AV1',
-      location: 'alex-laptop1',
+      line: 'AV',
       is_enabled: false,
       schedule_enabled: false,
       steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'AV0/output' } }],
@@ -209,7 +266,7 @@ describe('findUnwatchedConveyorStations', () => {
     writeStationFile('SV1__fetch_and_check.json', {
       id: 'sv1id',
       short_code: 'SV1',
-      location: 'alex-laptop1',
+      line: 'SV',
       archived_at: '2026-01-01T00:00:00.000Z',
       schedule_enabled: false,
       steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'SV0/output' } }],
@@ -222,7 +279,7 @@ describe('findUnwatchedConveyorStations', () => {
     writeStationFile('VM2__extract_apple_transcript.json', {
       id: 'vm2id',
       short_code: 'VM2',
-      location: 'alex-laptop',
+      line: 'VM',
       schedule_enabled: false,
       steps: [{ slug: 'lib-worker:move_files', config: { source_bin: 'VM0/output' } }],
     });
