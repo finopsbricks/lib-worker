@@ -78,7 +78,8 @@ Path conventions are hard-coded relative to `process.cwd()`:
 
 | Function | Description |
 |---|---|
-| `moveFiles(sources, destination)` | Move files between bins |
+| `moveWorkpieces({ source_dir, target_dir, batch_size })` | Move workpieces (folders with a `pointer.json`) between bins |
+| `listWorkpieces(bin_dir)` / `isWorkpieceDir(dir)` | The workpiece test shared by the conveyor and the bin-watcher |
 | `processWorkpiece({ station, workpiece_id, work_record_id, body })` | 5-bin doing-bin contract helper for workpiece-mode steps |
 | `cleanupOrphanedDoing()` | Clean up stuck `doing/` entries |
 | `logEvent(wp, station, work_record_id, event)` | Append a `{ts, station, wr, event}` line to `{wp}/log.jsonl` |
@@ -90,8 +91,7 @@ Path conventions are hard-coded relative to `process.cwd()`:
 
 | Slug | Export | Description |
 |---|---|---|
-| `lib-worker:move_files` | `moveFilesStep` | Move files between assembly-line bins (supports `moves` array) |
-| `lib-worker:split_bundles` | `splitBundlesStep` | Split multi-page PDF bundles into individual page PDFs |
+| `lib-worker:move_files` | `moveFilesStep` | Conveyor: move workpieces between assembly-line bins (supports `moves` array) |
 
 ## Usage
 

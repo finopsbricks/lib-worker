@@ -41,6 +41,7 @@ const { binHasWorkpieces, checkAndTrigger } = await import('../src/bin-watcher.j
 function mkdir_workpiece(rel_path) {
   const full = path.join(tmp_dir, rel_path);
   fs.mkdirSync(full, { recursive: true });
+  fs.writeFileSync(path.join(full, 'pointer.json'), JSON.stringify({ workpiece_id: path.basename(full) }));
 }
 
 describe('binHasWorkpieces', () => {
@@ -52,7 +53,7 @@ describe('binHasWorkpieces', () => {
     fs.rmSync(tmp_dir, { recursive: true, force: true });
   });
 
-  it('returns true when the bin has a non-dot subdirectory', async () => {
+  it('returns true when the bin has a workpiece folder with a pointer.json', async () => {
     mkdir_workpiece('stations/CAR0/output/car-27');
     fs.writeFileSync(path.join(tmp_dir, 'stations/CAR0/output/.DS_Store'), '');
 
@@ -78,6 +79,31 @@ describe('binHasWorkpieces', () => {
     const result = await binHasWorkpieces('CAR0', 'output');
 
     assert.equal(result, false);
+  });
+
+  it('ignores a folder without a pointer.json', async () => {
+    fs.mkdirSync(path.join(tmp_dir, 'stations/CAR0/output/not-a-workpiece'), { recursive: true });
+
+    const result = await binHasWorkpieces('CAR0', 'output');
+
+    assert.equal(result, false);
+  });
+
+  it('ignores a dot-folder even when it has a pointer.json', async () => {
+    mkdir_workpiece('stations/CAR0/output/.car-27');
+
+    const result = await binHasWorkpieces('CAR0', 'output');
+
+    assert.equal(result, false);
+  });
+
+  it('finds a workpiece alongside folders that are not workpieces', async () => {
+    fs.mkdirSync(path.join(tmp_dir, 'stations/CAR0/output/extract'), { recursive: true });
+    mkdir_workpiece('stations/CAR0/output/car-27');
+
+    const result = await binHasWorkpieces('CAR0', 'output');
+
+    assert.equal(result, true);
   });
 });
 

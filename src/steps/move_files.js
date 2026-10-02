@@ -1,6 +1,6 @@
 import { defineStep } from '../define-step.js';
 import { attachDocument, attachReport } from '../orchestrator.js';
-import { moveFiles } from '../files.js';
+import { moveWorkpieces } from '../files.js';
 import { bin } from '../workerPaths.js';
 import { renderLocal } from '../renderLocal.js';
 import { z } from 'zod';
@@ -10,23 +10,25 @@ function parseBin(name) {
   return name.split('/');
 }
 
+// Strict, so a leftover files-mode key (`mode: "files"`, `pattern`,
+// `recursive`) fails the step loudly instead of silently moving nothing.
+// `mode: "directories"` is tolerated and ignored: most station files still
+// carry it from when the conveyor had two modes.
 const moveSchema = z.object({
   source_bin: z.string(),
   target_bin: z.string(),
-  mode: z.enum(['files', 'directories']).default('files'),
-  pattern: z.string().default('*'),
   batch_size: z.number().default(100),
-  recursive: z.boolean().default(false),
-});
+  mode: z.literal('directories').optional(),
+}).strict();
 
 export default defineStep({
   slug: 'lib-worker:move_files',
   name: 'Move Files Between Bins',
-  description: 'Generic conveyor belt step — moves files or directories from one station bin to another',
+  description: 'Conveyor step — moves workpieces (directories with a pointer.json) from one station bin to another',
 
   inputSchema: z.union([
     moveSchema.extend({ report: z.boolean().default(false) }),
-    z.object({ moves: z.array(moveSchema).min(1), report: z.boolean().default(false) }),
+    z.object({ moves: z.array(moveSchema).min(1), report: z.boolean().default(false) }).strict(),
   ]),
   outputSchema: z.object({
     moved_count: z.number(),
@@ -46,14 +48,14 @@ export default defineStep({
     const all_entries = [];
 
     for (const move of moves) {
-      const { source_bin, target_bin, mode, pattern, batch_size, recursive } = move;
+      const { source_bin, target_bin, batch_size } = move;
       const [src_station, ...src_rest] = parseBin(source_bin);
       const [tgt_station, ...tgt_rest] = parseBin(target_bin);
 
-      const result = moveFiles({
+      const result = moveWorkpieces({
         source_dir: bin(src_station, ...src_rest),
         target_dir: bin(tgt_station, ...tgt_rest),
-        mode, pattern, batch_size, recursive,
+        batch_size,
       });
 
       total_moved += result.moved_count;
@@ -61,7 +63,7 @@ export default defineStep({
       all_entries.push(...result.entries);
 
       moves_detail.push({
-        source_bin, target_bin, mode,
+        source_bin, target_bin,
         moved_count: result.moved_count,
         total_available: result.total_available,
         entries: result.entries,

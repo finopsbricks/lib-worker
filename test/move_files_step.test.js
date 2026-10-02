@@ -39,6 +39,11 @@ function mkfile(rel_path, content = '') {
   return full;
 }
 
+/** A workpiece folder: rel_path/pointer.json */
+function mkworkpiece(rel_path) {
+  mkfile(path.join(rel_path, 'pointer.json'), '{}');
+}
+
 function exists(rel_path) {
   return fs.existsSync(path.join(tmp_dir, rel_path));
 }
@@ -55,8 +60,6 @@ describe('move_files inputSchema', () => {
     });
     assert.ok(result.success);
     assert.equal(result.data.source_bin, 'HI1/output');
-    assert.equal(result.data.mode, 'files');
-    assert.equal(result.data.pattern, '*');
     assert.equal(result.data.batch_size, 100);
   });
 
@@ -64,13 +67,40 @@ describe('move_files inputSchema', () => {
     const result = moveFilesStep.inputSchema.safeParse({
       moves: [
         { source_bin: 'HI1/output', target_bin: 'HI3/input' },
-        { source_bin: 'HI1/done', target_bin: 'HI3/input', mode: 'directories' },
+        { source_bin: 'HI1/done', target_bin: 'HI3/input' },
       ],
     });
     assert.ok(result.success);
     assert.equal(result.data.moves.length, 2);
-    assert.equal(result.data.moves[1].mode, 'directories');
   });
+
+  it('tolerates the legacy mode: "directories"', () => {
+    const simple = moveFilesStep.inputSchema.safeParse({
+      source_bin: 'HI1/output', target_bin: 'HI3/input', mode: 'directories',
+    });
+    const moves = moveFilesStep.inputSchema.safeParse({
+      moves: [{ source_bin: 'HI1/output', target_bin: 'HI3/input', mode: 'directories' }],
+    });
+    assert.ok(simple.success);
+    assert.ok(moves.success);
+  });
+
+  for (const [label, extra] of [
+    ['mode: "files"', { mode: 'files' }],
+    ['pattern', { pattern: '*.pdf' }],
+    ['recursive', { recursive: true }],
+  ]) {
+    it(`rejects the removed files-mode option ${label}`, () => {
+      const simple = moveFilesStep.inputSchema.safeParse({
+        source_bin: 'HI1/output', target_bin: 'HI3/input', ...extra,
+      });
+      const moves = moveFilesStep.inputSchema.safeParse({
+        moves: [{ source_bin: 'HI1/output', target_bin: 'HI3/input', ...extra }],
+      });
+      assert.ok(!simple.success);
+      assert.ok(!moves.success);
+    });
+  }
 
   it('rejects empty moves array', () => {
     const result = moveFilesStep.inputSchema.safeParse({ moves: [] });
@@ -96,20 +126,22 @@ describe('move_files execute', () => {
     fs.rmSync(tmp_dir, { recursive: true, force: true });
   });
 
-  it('simple config still works', async () => {
-    mkfile('stations/HI1/output/a.txt', 'aaa');
-    mkfile('stations/HI1/output/b.txt', 'bbb');
+  it('simple config moves workpieces and attaches a document', async () => {
+    mkworkpiece('stations/HI1/output/wp-a');
+    mkworkpiece('stations/HI1/output/wp-b');
+    mkfile('stations/HI1/output/stray.pdf');
 
     const result = await moveFilesStep.execute(
-      { source_bin: 'HI1/output', target_bin: 'HI3/input', mode: 'files', pattern: '*', batch_size: 100 },
+      { source_bin: 'HI1/output', target_bin: 'HI3/input', batch_size: 100 },
       mockContext,
     );
 
     assert.equal(result.moved_count, 2);
     assert.equal(result.total_available, 2);
-    assert.deepEqual(result.entries, ['a.txt', 'b.txt']);
-    assert.ok(exists('stations/HI3/input/a.txt'));
-    assert.ok(!exists('stations/HI1/output/a.txt'));
+    assert.deepEqual(result.entries, ['wp-a', 'wp-b']);
+    assert.ok(exists('stations/HI3/input/wp-a/pointer.json'));
+    assert.ok(!exists('stations/HI1/output/wp-a'));
+    assert.ok(exists('stations/HI1/output/stray.pdf'));
     // Default: attachDocument (supporting document)
     assert.equal(attachDocumentCalls.length, 1);
     assert.equal(attachDocumentCalls[0][0], 'wr_test_123');
@@ -118,14 +150,14 @@ describe('move_files execute', () => {
   });
 
   it('moves array with two moves aggregates counts', async () => {
-    mkfile('stations/HI1/output/a.txt', 'aaa');
-    mkfile('stations/HI1/done/b.txt', 'bbb');
-    mkfile('stations/HI1/done/c.txt', 'ccc');
+    mkworkpiece('stations/HI1/output/a');
+    mkworkpiece('stations/HI1/done/b');
+    mkworkpiece('stations/HI1/done/c');
 
     const config = {
       moves: [
-        { source_bin: 'HI1/output', target_bin: 'HI3/input', mode: 'files', pattern: '*', batch_size: 100 },
-        { source_bin: 'HI1/done', target_bin: 'HI3/input', mode: 'files', pattern: '*', batch_size: 100 },
+        { source_bin: 'HI1/output', target_bin: 'HI3/input', batch_size: 100 },
+        { source_bin: 'HI1/done', target_bin: 'HI3/input', batch_size: 100 },
       ],
     };
 
@@ -133,41 +165,22 @@ describe('move_files execute', () => {
 
     assert.equal(result.moved_count, 3);
     assert.equal(result.total_available, 3);
-    assert.deepEqual(result.entries, ['a.txt', 'b.txt', 'c.txt']);
-    assert.ok(exists('stations/HI3/input/a.txt'));
-    assert.ok(exists('stations/HI3/input/b.txt'));
-    assert.ok(exists('stations/HI3/input/c.txt'));
+    assert.deepEqual(result.entries, ['a', 'b', 'c']);
+    assert.ok(exists('stations/HI3/input/a'));
+    assert.ok(exists('stations/HI3/input/b'));
+    assert.ok(exists('stations/HI3/input/c'));
     assert.equal(attachDocumentCalls.length, 1);
     assert.equal(attachReportCalls.length, 0);
   });
 
-  it('moves array with different modes', async () => {
-    mkfile('stations/HI1/output/doc.pdf', 'pdf');
-    mkfile('stations/HI1/done/bundle_a/page.txt', 'text');
-
-    const config = {
-      moves: [
-        { source_bin: 'HI1/output', target_bin: 'HI3/input', mode: 'files', pattern: '*', batch_size: 100 },
-        { source_bin: 'HI1/done', target_bin: 'HI3/input', mode: 'directories', pattern: '*', batch_size: 100 },
-      ],
-    };
-
-    const result = await moveFilesStep.execute(config, mockContext);
-
-    assert.equal(result.moved_count, 2);
-    assert.deepEqual(result.entries, ['doc.pdf', 'bundle_a']);
-    assert.ok(exists('stations/HI3/input/doc.pdf'));
-    assert.ok(exists('stations/HI3/input/bundle_a/page.txt'));
-  });
-
   it('one move has nothing to transfer', async () => {
-    // First source is empty (doesn't exist), second has files
-    mkfile('stations/HI1/done/x.txt', 'xxx');
+    // First source is empty (doesn't exist), second has a workpiece
+    mkworkpiece('stations/HI1/done/x');
 
     const config = {
       moves: [
-        { source_bin: 'HI1/output', target_bin: 'HI3/input', mode: 'files', pattern: '*', batch_size: 100 },
-        { source_bin: 'HI1/done', target_bin: 'HI3/input', mode: 'files', pattern: '*', batch_size: 100 },
+        { source_bin: 'HI1/output', target_bin: 'HI3/input', batch_size: 100 },
+        { source_bin: 'HI1/done', target_bin: 'HI3/input', batch_size: 100 },
       ],
     };
 
@@ -175,17 +188,17 @@ describe('move_files execute', () => {
 
     assert.equal(result.moved_count, 1);
     assert.equal(result.total_available, 1);
-    assert.deepEqual(result.entries, ['x.txt']);
+    assert.deepEqual(result.entries, ['x']);
   });
 
   it('report contains per-move breakdown', async () => {
-    mkfile('stations/HI1/output/a.txt', 'aaa');
-    mkfile('stations/HI1/done/b.txt', 'bbb');
+    mkworkpiece('stations/HI1/output/a');
+    mkworkpiece('stations/HI1/done/b');
 
     const config = {
       moves: [
-        { source_bin: 'HI1/output', target_bin: 'HI3/input', mode: 'files', pattern: '*', batch_size: 100 },
-        { source_bin: 'HI1/done', target_bin: 'HI3/input', mode: 'files', pattern: '*', batch_size: 100 },
+        { source_bin: 'HI1/output', target_bin: 'HI3/input', batch_size: 100 },
+        { source_bin: 'HI1/done', target_bin: 'HI3/input', batch_size: 100 },
       ],
     };
 
@@ -199,10 +212,10 @@ describe('move_files execute', () => {
   });
 
   it('report: true uploads as report instead of document', async () => {
-    mkfile('stations/HI1/output/a.txt', 'aaa');
+    mkworkpiece('stations/HI1/output/a');
 
     const result = await moveFilesStep.execute(
-      { source_bin: 'HI1/output', target_bin: 'HI3/input', mode: 'files', pattern: '*', batch_size: 100, report: true },
+      { source_bin: 'HI1/output', target_bin: 'HI3/input', batch_size: 100, report: true },
       mockContext,
     );
 

@@ -1,20 +1,40 @@
 /**
- * File and directory movement utilities for worker steps.
+ * Workpiece movement between station bins.
+ *
+ * A workpiece is a non-dot directory carrying a `pointer.json`. Bins move
+ * whole workpieces, never loose files: the conveyor (`move_files`) and the
+ * bin-watcher both use isWorkpieceDir(), so the watcher only triggers on
+ * what the conveyor will actually move.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 
 /**
- * Simple pattern match: '*' matches all, '*.pdf' matches .pdf extension, exact name matches exact.
- * @param {string} filename
- * @param {string} pattern
+ * True when dir is a workpiece: a directory holding a `pointer.json`. Sub-bins
+ * (e.g. `output/extract/`) hold workpieces but carry no pointer themselves.
+ *
+ * @param {string} dir
  * @returns {boolean}
  */
-function matchesPattern(filename, pattern) {
-  if (pattern === '*') return true;
-  if (pattern.startsWith('*.')) return filename.endsWith(pattern.slice(1));
-  return filename === pattern;
+export function isWorkpieceDir(dir) {
+  return fs.existsSync(path.join(dir, 'pointer.json'));
+}
+
+/**
+ * Names of the workpieces directly inside bin_dir, sorted. Empty when the bin
+ * doesn't exist.
+ *
+ * @param {string} bin_dir
+ * @returns {string[]}
+ */
+export function listWorkpieces(bin_dir) {
+  if (!fs.existsSync(bin_dir)) return [];
+  return fs
+    .readdirSync(bin_dir, { withFileTypes: true })
+    .filter(d => d.isDirectory() && !d.name.startsWith('.') && isWorkpieceDir(path.join(bin_dir, d.name)))
+    .map(d => d.name)
+    .sort();
 }
 
 /**
@@ -36,108 +56,19 @@ function mergeDir(src, dst) {
 }
 
 /**
- * Recursively collect files from dir and all subdirectories.
- * Returns array of { rel_path, full_path } where rel_path is relative to base_dir.
- */
-function collectFilesRecursive(dir, pattern, base_dir = dir) {
-  const entries = [];
-  if (!fs.existsSync(dir)) return entries;
-  for (const dirent of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (dirent.name.startsWith('.')) continue;
-    const full_path = path.join(dir, dirent.name);
-    if (dirent.isDirectory()) {
-      entries.push(...collectFilesRecursive(full_path, pattern, base_dir));
-    } else if (dirent.isFile() && matchesPattern(dirent.name, pattern)) {
-      entries.push({ rel_path: path.relative(base_dir, full_path), full_path });
-    }
-  }
-  return entries;
-}
-
-/**
- * Remove empty directories bottom-up starting from dir, stopping at (but not removing) stop_at.
- */
-function removeEmptyDirs(dir, stop_at) {
-  if (!fs.existsSync(dir)) return;
-  for (const dirent of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (dirent.isDirectory()) {
-      removeEmptyDirs(path.join(dir, dirent.name), stop_at);
-    }
-  }
-  if (dir !== stop_at && fs.readdirSync(dir).length === 0) {
-    fs.rmdirSync(dir);
-  }
-}
-
-/**
- * Move files or directories from source_dir to target_dir.
+ * Move workpieces from source_dir to target_dir, oldest name first. A
+ * workpiece whose name already exists in target_dir is merged into it.
  *
  * @param {object} options
- * @param {string} options.source_dir - Absolute path to source directory
- * @param {string} options.target_dir - Absolute path to target directory
- * @param {'files' | 'directories'} [options.mode='files'] - What to move
- * @param {string} [options.pattern='*'] - Glob-like filter for files ('*', '*.pdf', 'exact.json')
- * @param {number} [options.batch_size=100] - Max entries to move per call
- * @param {boolean} [options.recursive=false] - Walk subdirectories (files mode only), flatten into target
+ * @param {string} options.source_dir - Absolute path to the source bin
+ * @param {string} options.target_dir - Absolute path to the target bin
+ * @param {number} [options.batch_size=100] - Max workpieces to move per call
  * @returns {{ moved_count: number, total_available: number, entries: string[] }}
  */
-export function moveFiles({
-  source_dir,
-  target_dir,
-  mode = 'files',
-  pattern = '*',
-  batch_size = 100,
-  recursive = false,
-} = {}) {
-  const empty_result = { moved_count: 0, total_available: 0, entries: [] };
-
-  if (!fs.existsSync(source_dir)) {
-    return empty_result;
-  }
-
-  // Recursive file collection: walk subdirs, flatten into target
-  if (recursive && mode === 'files') {
-    const all_files = collectFilesRecursive(source_dir, pattern).sort((a, b) =>
-      a.rel_path.localeCompare(b.rel_path),
-    );
-
-    if (all_files.length === 0) return empty_result;
-
-    const batch = all_files.slice(0, batch_size);
-    fs.mkdirSync(target_dir, { recursive: true });
-
-    const entries = [];
-    for (const file of batch) {
-      // Flatten: vendor-a/file.pdf → vendor-a__file.pdf
-      const flat_name = file.rel_path.includes(path.sep)
-        ? file.rel_path.replaceAll(path.sep, '__')
-        : file.rel_path;
-      fs.renameSync(file.full_path, path.join(target_dir, flat_name));
-      entries.push(flat_name);
-    }
-
-    removeEmptyDirs(source_dir, source_dir);
-
-    return { moved_count: entries.length, total_available: all_files.length, entries };
-  }
-
-  const dirents = fs.readdirSync(source_dir, { withFileTypes: true });
-  let all_entries;
-
-  if (mode === 'directories') {
-    all_entries = dirents
-      .filter(d => d.isDirectory() && !d.name.startsWith('.'))
-      .map(d => d.name)
-      .sort();
-  } else {
-    all_entries = dirents
-      .filter(d => d.isFile() && !d.name.startsWith('.') && matchesPattern(d.name, pattern))
-      .map(d => d.name)
-      .sort();
-  }
-
+export function moveWorkpieces({ source_dir, target_dir, batch_size = 100 } = {}) {
+  const all_entries = listWorkpieces(source_dir);
   if (all_entries.length === 0) {
-    return empty_result;
+    return { moved_count: 0, total_available: 0, entries: [] };
   }
 
   const batch = all_entries.slice(0, batch_size);
@@ -148,8 +79,7 @@ export function moveFiles({
     const src = path.join(source_dir, entry);
     const dst = path.join(target_dir, entry);
 
-    if (mode === 'directories' && fs.existsSync(dst)) {
-      // Target dir exists — merge contents recursively
+    if (fs.existsSync(dst)) {
       mergeDir(src, dst);
     } else {
       fs.renameSync(src, dst);

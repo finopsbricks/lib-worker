@@ -10,8 +10,8 @@ Guidance for Claude Code when working with this package.
 - **Step framework** — `defineStep()` with Zod schema validation, auto-discovery, config resolution
 - **Orchestrator integration** — Attaching documents/files/reports to work records, item CRUD, process triggering
 - **Template rendering** — Two-layer EJS templates (worker overrides lib defaults)
-- **File/path utils** — Assembly-line bin paths, file movement between stations
-- **Shared steps** — `move_files`, `split_bundles` (namespaced as `lib-worker:*`)
+- **File/path utils** — Assembly-line bin paths, workpiece movement between stations
+- **Shared steps** — `move_files` (namespaced as `lib-worker:*`)
 
 ### Sibling Libraries
 
@@ -49,10 +49,9 @@ src/
 ├── discover-steps.js         # discoverSteps, createGetHandler
 ├── renderLocal.js            # Co-located EJS template rendering
 ├── workerPaths.js            # bin(), workRecordDir(), workRecordFile()
-├── files.js                  # moveFiles()
+├── files.js                  # moveWorkpieces(), listWorkpieces(), isWorkpieceDir()
 ├── steps/
-│   ├── move_files.js         # lib-worker:move_files shared step
-│   └── split_bundles.js      # lib-worker:split_bundles shared step
+│   └── move_files.js         # lib-worker:move_files shared step
 └── utils/
     ├── config-resolver.js    # {{env.VAR}} and {{step_slug.field}} resolution
     ├── template-renderer.js  # Two-layer EJS rendering

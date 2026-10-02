@@ -2,10 +2,10 @@
 
 **Timestamp**: <%= timestamp %>
 
-| # | Source | Target | Mode | Moved | Available |
-|---|--------|--------|------|------:|----------:|
+| # | Source | Target | Moved | Available |
+|---|--------|--------|------:|----------:|
 <% moves_detail.forEach((m, i) => { -%>
-| <%= i + 1 %> | <%= m.source_bin %> | <%= m.target_bin %> | <%= m.mode %> | <%= m.moved_count %> | <%= m.total_available %> |
+| <%= i + 1 %> | <%= m.source_bin %> | <%= m.target_bin %> | <%= m.moved_count %> | <%= m.total_available %> |
 <% }) -%>
 
 **Total moved**: <%= total_moved %> / <%= total_available %> available
@@ -14,7 +14,7 @@
 
 ## Move <%= i + 1 %>: <%= m.source_bin %> → <%= m.target_bin %>
 
-| <%= m.mode === 'directories' ? 'Directory' : 'File' %> |
+| Workpiece |
 |------|
 <% m.entries.forEach(e => { -%>
 | `<%= e %>` |

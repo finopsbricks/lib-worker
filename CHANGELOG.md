@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING:** bins move workpieces only. A workpiece is a non-dot folder holding a `pointer.json`; the `move_files` conveyor and the bin-watcher now use the same test (`listWorkpieces()` in `files.js`), so the watcher only triggers on what the conveyor will move. Loose files, sub-bins (e.g. `output/extract/`) and folders without a pointer are left where they are.
+- **BREAKING:** `move_files` loses its files mode. `mode`, `pattern` and `recursive` are gone and the config is strict: `mode: "files"`, `pattern` or `recursive` fails the step with a validation error rather than silently moving nothing. `mode: "directories"` is still accepted, and ignored, so existing station files keep working unchanged.
+- **BREAKING:** removed `lib-worker:split_bundles` (`splitBundlesStep`). It split loose PDFs sitting in an `input` bin — the same loose-file model as files mode — and no station used it. A worker's `src/index.js` that imports `splitBundlesStep` must drop the import and its registration.
+- **BREAKING:** `moveFiles()` is replaced by `moveWorkpieces({ source_dir, target_dir, batch_size })`; `listWorkpieces()` and `isWorkpieceDir()` are exported alongside it.
+
+### Migration
+- A line whose conveyors used files mode (worker-agilitas's AP, GP and VO lines) must move to workpiece folders before upgrading.
+- Every workpiece must carry a `pointer.json`, or the conveyor won't move it and the watcher won't see it. worker-Demo2's PA line marks its workpieces with `bundle.json` only and needs a `pointer.json` added before upgrading.
+- Optional: drop `"mode": "directories"` from station files the next time they're pushed.
+
 ## [0.33.0] - 2026-09-05
 
 ### Changed

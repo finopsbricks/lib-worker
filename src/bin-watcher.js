@@ -6,32 +6,28 @@
  *
  * Runs concurrently with startWorker()'s own poll loop — both are
  * cooperative async loops in the same process; startBinWatcher() resolves
- * quickly (after one readdir pass) and returns, it doesn't block.
+ * quickly (after one pass over the station files) and returns, it doesn't block.
  */
 
-import { readdir } from 'node:fs/promises';
 import { bin } from './workerPaths.js';
+import { listWorkpieces } from './files.js';
 import { resolveWatchedStations, findUnwatchedConveyorStations } from './utils/watched-stations.js';
 import { hasInFlightRun, triggerStationRun } from './utils/bin-watch-trigger.js';
 
 const DEFAULT_INTERVAL_MS = 10_000;
 
 /**
- * True when the given station's bin has at least one workpiece directory in
- * it. Mirrors the directories-mode convention used elsewhere in this
- * package (see files.js's moveFiles directory filter): any subdirectory not
- * starting with `.` counts as a workpiece. Renames into a bin are atomic
- * (fs.renameSync, see files.js), so a basename present here is always fully
- * committed, never a partial write.
+ * True when the given station's bin has at least one workpiece in it — the
+ * same test the `move_files` conveyor uses to pick what it moves (see
+ * files.js's listWorkpieces), so the watcher never triggers a run on
+ * something the conveyor would leave behind.
  *
  * @param {string} station
  * @param {string} binName
  * @returns {Promise<boolean>}
  */
 export async function binHasWorkpieces(station, binName) {
-  const dir = bin(station, binName);
-  const entries = await readdir(dir, { withFileTypes: true });
-  return entries.some(e => e.isDirectory() && !e.name.startsWith('.'));
+  return listWorkpieces(bin(station, binName)).length > 0;
 }
 
 /**

@@ -53,7 +53,7 @@ export { resolveConfig } from './utils/config-resolver.js';
 export { bin, workRecordDir, workRecordFile } from './workerPaths.js';
 
 // File utilities
-export { moveFiles } from './files.js';
+export { moveWorkpieces, listWorkpieces, isWorkpieceDir } from './files.js';
 
 // Workpiece-mode step helpers (5-bin doing-bin contract)
 export { processWorkpiece, cleanupOrphanedDoing } from './utils/workpiece-station.js';
@@ -65,7 +65,6 @@ export { stripFrontmatter, countWords } from './utils/markdown.js';
 
 // Shared step definitions
 export { default as moveFilesStep } from './steps/move_files.js';
-export { default as splitBundlesStep } from './steps/split_bundles.js';
 
 // Bin-watch station triggering (event-driven alternative/addition to cron
 // for downstream conveyor stations — see Stations.watch_enabled)
