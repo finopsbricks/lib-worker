@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-10-03
+
+### Added
+- **Intake watch for line-heads.** A `watch_enabled` station whose step 0 is not a conveyor can now declare a `watch_path` in its step 0 config — the inbox folder or file it drains. `startIntakeWatcher()` (`src/intake-watcher.js`) polls each one every 10 s and triggers a run when it is non-empty (a file larger than 0 bytes, or a folder with any entry not starting with `.`) and no run is in flight. A relative `watch_path` resolves against the worker root; a missing one logs a warning at boot and counts as no work. `startBinWatcher()` starts it, so workers need no code change. Polls rather than using `fs.watch`, which is unreliable on macOS and in iCloud folders.
+- The startup warning now also flags a line-head that feeds a conveyor but has neither `schedule_enabled` nor `watch_enabled` — the gap that left worker-chisel's BK-DI0 with no trigger. A standalone station that feeds nothing is still not flagged.
+
+### Changed
+- A `watch_enabled` station with neither a `move_files` step 0 nor a step 0 `watch_path` is still a boot error; the message now names both options.
+
 ## [0.34.0] - 2026-10-03
 
 ### Changed
