@@ -1,6 +1,6 @@
 # Intake Watch for Line-Head Stations
 
-## Status: IN PROGRESS (~40%)
+## Status: IN PROGRESS (~70%)
 
 Let a line-head (intake) station be triggered by the worker the moment its inbox has something in it, instead of on an hourly cron. A second, separate watcher in `@fob/lib-worker` polls one declared path per station — a folder (worker-chisel `BK-DI0`) or a file (worker-alex `CAR0`, `M0`, `Y0`) — and triggers a run when that path is non-empty. It does not touch the bin-watcher.
 
@@ -91,11 +91,11 @@ Polling, not `fs.watch`: `fs.watch` is unreliable on macOS and in iCloud-synced 
 - [x] README + CHANGELOG; released **v0.35.0**
 - [x] FDE handbook: `station-triggers.md` gains an "Intake watch (line-heads)" section; `watch_path` in `station-definition-schema.md`
 
-### Phase 2: worker-chisel — BK-DI0 ❌
-- [ ] BK-DI0 moves zips that won't open to `temp/stations/BK-DI0/rejected/` (name clash → `-2`) and reports them, instead of leaving them in the inbox
-- [ ] Station JSON: `watch_enabled: true`, `watch_path: "temp/inbox"`; safety-net cron `schedule_cron: "0 0 * * *"`, `schedule_enabled: true` (it has no live cron today); push
-- [ ] Bump `@fob/lib-worker`; restart; drop a file, a zip, a corrupt zip and a two-document bundle into the inbox and confirm: each is picked up within ~10 s, the bundle's split parts come back through intake without waiting for a cron, the corrupt zip lands in `rejected/`, and triggering stops once the inbox is empty
-- [ ] Update `docs/lines/BK-DI.md` and `CLAUDE.md` (BK-DI0 is watch-triggered, not hourly cron)
+### Phase 2: worker-chisel — BK-DI0 ✅
+- [x] BK-DI0 moves zips that won't open and unreadable files to `temp/stations/BK-DI0/rejected/` (clash → `-2`) and reports them as "Rejected", instead of leaving them in the inbox; a top-level `__MACOSX` folder is removed too (the tidy pass's own walker skipped it, so it would have stayed for good)
+- [x] Station JSON: `watch_enabled: true`, `watch_path: "temp/inbox"`, safety-net cron `0 0 * * *` with `schedule_enabled: true`; pushed (profile `chisel`)
+- [x] Bumped `@fob/lib-worker` to v0.35.0; restarted. Live check: a duplicate PDF, a zip holding a duplicate and a corrupt zip were handled within ~17 s — duplicates deleted, corrupt zip in `rejected/` — and the watcher went quiet once the inbox was empty. Enabling the cron also fired one catch-up run (the station had never run on schedule), which found the files still settling. **Not live-checked:** a two-document bundle's split parts coming back through intake — that needs new content, so it would run the LLM stations and write ledger rows; the watcher sees those parts exactly like any other dropped file
+- [x] `docs/lines/BK-DI.md` and `CLAUDE.md`: BK-DI0 is watch-triggered; rejects go to `rejected/`
 
 ### Phase 3: worker-alex — CAR0, M0, Y0 ❌
 - [ ] Station JSONs: `watch_enabled: true`, `watch_path` = the inbox file; hourly cron → daily safety net (`schedule_cron: "0 0 * * *"`, `schedule_enabled` stays `true`); push
