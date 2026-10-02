@@ -44,6 +44,15 @@ Path conventions are hard-coded relative to `process.cwd()`:
 | `discoverSteps(dir)` | Auto-discover step modules in a directory |
 | `createGetHandler(definitions)` | Build a `getHandler` from a definitions map |
 
+### Station Triggering
+
+Start alongside `startWorker()`. Each watcher triggers a `watch_enabled` station (from the worker's local `.orchestrator/` files) when it has work and no run in flight.
+
+| Function | Description |
+|---|---|
+| `startBinWatcher()` | Every 10 s: trigger conveyor stations whose `input` or upstream `source_bin` holds a workpiece. Also starts the intake watcher, and warns at boot about stations nothing triggers |
+| `startIntakeWatcher()` | Every 10 s: trigger line-heads whose step 0 `watch_path` (an inbox folder or file) is non-empty. Started by `startBinWatcher()`; call it directly only if you don't use the bin-watcher |
+
 ### Orchestrator Integration
 
 | Function | Description |

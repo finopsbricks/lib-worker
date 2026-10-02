@@ -66,7 +66,9 @@ export { stripFrontmatter, countWords } from './utils/markdown.js';
 // Shared step definitions
 export { default as moveFilesStep } from './steps/move_files.js';
 
-// Bin-watch station triggering (event-driven alternative/addition to cron
-// for downstream conveyor stations — see Stations.watch_enabled)
+// Watch-triggered stations (event-driven alternative/addition to cron — see
+// Stations.watch_enabled): bin-watch for conveyors, intake watch for
+// line-heads. startBinWatcher() starts both.
 export { startBinWatcher } from './bin-watcher.js';
+export { startIntakeWatcher } from './intake-watcher.js';
 

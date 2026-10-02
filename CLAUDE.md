@@ -50,6 +50,8 @@ src/
 ├── renderLocal.js            # Co-located EJS template rendering
 ├── workerPaths.js            # bin(), workRecordDir(), workRecordFile()
 ├── files.js                  # moveWorkpieces(), listWorkpieces(), isWorkpieceDir()
+├── bin-watcher.js            # startBinWatcher — triggers watch_enabled conveyors
+├── intake-watcher.js         # startIntakeWatcher — triggers watch_enabled line-heads
 ├── steps/
 │   └── move_files.js         # lib-worker:move_files shared step
 └── utils/

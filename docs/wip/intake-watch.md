@@ -1,6 +1,6 @@
 # Intake Watch for Line-Head Stations
 
-## Status: NOT STARTED
+## Status: IN PROGRESS (~40%)
 
 Let a line-head (intake) station be triggered by the worker the moment its inbox has something in it, instead of on an hourly cron. A second, separate watcher in `@fob/lib-worker` polls one declared path per station — a folder (worker-chisel `BK-DI0`) or a file (worker-alex `CAR0`, `M0`, `Y0`) — and triggers a run when that path is non-empty. It does not touch the bin-watcher.
 
@@ -82,13 +82,14 @@ Polling, not `fs.watch`: `fs.watch` is unreliable on macOS and in iCloud-synced 
 
 ## Implementation Phases
 
-### Phase 1: lib-worker — intake watcher ❌
-- [ ] `src/utils/watched-stations.js`: resolve intake-watched stations (`watch_enabled` + step 0 `watch_path`); keep conveyor resolution unchanged; boot error only when a `watch_enabled` station has neither
-- [ ] `src/intake-watcher.js`: `pathHasWork(abs_path)` (file `size > 0`, folder with a non-dot entry, missing → false) and the tick loop, reusing `hasInFlightRun` / `triggerStationRun`
-- [ ] `startBinWatcher()` starts the intake loop too; warn at boot for a missing `watch_path`
-- [ ] Tests (`node:test` + `mock.module`, like `test/bin-watcher.test.js`): file empty/non-empty, folder empty/dot-only/non-empty, missing path, in-flight skip, per-station error isolation, resolution branching and boot errors
-- [ ] README + CHANGELOG; release as a minor version (additive — no existing config changes meaning)
-- [ ] FDE handbook: update `station-design/station-triggers.md` — line-heads can now be watched; document `watch_path`; add it to `station-definition-schema.md`
+### Phase 1: lib-worker — intake watcher ✅
+- [x] `src/utils/watched-stations.js`: `resolveIntakeWatchedStations()` (`watch_enabled` + step 0 `watch_path`, resolved against the worker root); conveyor resolution unchanged; boot error only when a `watch_enabled` station has neither
+- [x] `src/intake-watcher.js`: `pathHasWork(abs_path)` (file `size > 0`, folder with a non-dot entry, missing → false), `checkAndTriggerIntake()`, `startIntakeWatcher()`, reusing `hasInFlightRun` / `triggerStationRun`
+- [x] `startBinWatcher()` starts the intake loop too; warns at boot for a missing `watch_path`
+- [x] Startup warning (`findUntriggeredStations()`, was `findUnwatchedConveyorStations()`) also flags a line-head that a conveyor pulls from and that has neither trigger; standalone stations are not flagged
+- [x] Tests: `test/intake-watcher.test.js` (path states, in-flight skip, error isolation) + resolver/warning cases in `test/utils/watched-stations.test.js` — 75 passing
+- [x] README + CHANGELOG; released **v0.35.0**
+- [x] FDE handbook: `station-triggers.md` gains an "Intake watch (line-heads)" section; `watch_path` in `station-definition-schema.md`
 
 ### Phase 2: worker-chisel — BK-DI0 ❌
 - [ ] BK-DI0 moves zips that won't open to `temp/stations/BK-DI0/rejected/` (name clash → `-2`) and reports them, instead of leaving them in the inbox
@@ -101,15 +102,15 @@ Polling, not `fs.watch`: `fs.watch` is unreliable on macOS and in iCloud-synced 
 - [ ] Bump `@fob/lib-worker`; restart; paste a URL into each inbox and confirm a run within ~10 s, the file is drained, and no further runs follow
 - [ ] Update worker-alex `CLAUDE.md` line descriptions (CAR0/M0/Y0 "hourly cron" → watch-triggered)
 
-## Open Questions
+## Out of Scope
 
-- **Startup warning for untriggered line-heads.** `findUnwatchedConveyorStations()` only checks conveyors, which is how BK-DI0 sat with no trigger unnoticed. Extend it to line-heads that have neither a cron nor a watch? Small, and fits Phase 1.
 - **Email intakes (worker-alex `EM0`, `SI0`)** poll a mailbox, not a path — out of scope; they stay on cron.
 
 ## Related Files
 
 - `src/bin-watcher.js` — existing conveyor watcher; `startBinWatcher()` entry point
-- `src/utils/watched-stations.js` — station resolution (location filter, `watch_enabled`, boot errors)
+- `src/intake-watcher.js` — the intake watcher
+- `src/utils/watched-stations.js` — station resolution (location filter, `watch_enabled`, boot errors) and the startup warning
 - `src/utils/bin-watch-trigger.js` — `hasInFlightRun()` / `triggerStationRun()`, shared
 - `workers/worker-chisel/src/steps/BK-DI0__intake_documents/BK-DI0_01_intake_documents.js` — `tidyInbox()` (where corrupt zips are left today) and the `settle_seconds` guard
 - `workers/worker-alex/src/steps/CAR0__discover_urls/CAR0_01_discover_urls.js` — `drainInbox()`, the truncate / preserve-appends drain
