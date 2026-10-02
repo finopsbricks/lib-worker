@@ -72,7 +72,7 @@ Polling, not `fs.watch`: `fs.watch` is unreliable on macOS and in iCloud-synced 
 - **Reuse `watch_enabled`, no new flag.** The orchestrator never reads the flag (the worker does), it means the same thing — "the worker starts this station when there's work" — and a new flag would need an orchestrator column. The two watchers stay separate in code; only the flag and the in-flight/trigger helpers are shared.
 - **`watch_path` is its own key, even where it duplicates a step key** (`inbox_dir` on BK-DI0). It keeps the watcher independent of how each step names its config. Revisit if the duplication drifts in practice.
 - **No minimum-age check in the watcher.** A file still being copied triggers a run that BK-DI0's `settle_seconds` guard turns into a no-op, then the watcher fires again 10 s later — 1–2 empty runs per drop. Accepted, rather than duplicating `settle_seconds` in the watcher.
-- **Crons go off once the watch is live.** An optional loose daily cron can stay as a safety net if the watcher process hangs; both triggers share the same in-flight guard.
+- **Keep a daily cron as a safety net.** Once the watch is live, each watched line-head drops to a daily cron (`0 0 * * *`) instead of losing its cron entirely, so a hung or misconfigured watcher delays work by a day at most. Both triggers go through the same in-flight guard, so they never stack runs.
 
 ### Known consequences
 
@@ -92,12 +92,12 @@ Polling, not `fs.watch`: `fs.watch` is unreliable on macOS and in iCloud-synced 
 
 ### Phase 2: worker-chisel — BK-DI0 ❌
 - [ ] BK-DI0 moves zips that won't open to `temp/stations/BK-DI0/rejected/` (name clash → `-2`) and reports them, instead of leaving them in the inbox
-- [ ] Station JSON: `watch_enabled: true`, `watch_path: "temp/inbox"`; push
+- [ ] Station JSON: `watch_enabled: true`, `watch_path: "temp/inbox"`; safety-net cron `schedule_cron: "0 0 * * *"`, `schedule_enabled: true` (it has no live cron today); push
 - [ ] Bump `@fob/lib-worker`; restart; drop a file, a zip, a corrupt zip and a two-document bundle into the inbox and confirm: each is picked up within ~10 s, the bundle's split parts come back through intake without waiting for a cron, the corrupt zip lands in `rejected/`, and triggering stops once the inbox is empty
 - [ ] Update `docs/lines/BK-DI.md` and `CLAUDE.md` (BK-DI0 is watch-triggered, not hourly cron)
 
 ### Phase 3: worker-alex — CAR0, M0, Y0 ❌
-- [ ] Station JSONs: `watch_enabled: true`, `watch_path` = the inbox file; `schedule_enabled: false` (or a loose daily cron); push
+- [ ] Station JSONs: `watch_enabled: true`, `watch_path` = the inbox file; hourly cron → daily safety net (`schedule_cron: "0 0 * * *"`, `schedule_enabled` stays `true`); push
 - [ ] Bump `@fob/lib-worker`; restart; paste a URL into each inbox and confirm a run within ~10 s, the file is drained, and no further runs follow
 - [ ] Update worker-alex `CLAUDE.md` line descriptions (CAR0/M0/Y0 "hourly cron" → watch-triggered)
 
