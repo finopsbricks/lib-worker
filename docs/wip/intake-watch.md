@@ -1,6 +1,6 @@
 # Intake Watch for Line-Head Stations
 
-## Status: IN PROGRESS (~70%)
+## Status: IN PROGRESS (~90%) — code done and released; only the worker-alex deploy on its host (alex-pc) remains
 
 Let a line-head (intake) station be triggered by the worker the moment its inbox has something in it, instead of on an hourly cron. A second, separate watcher in `@fob/lib-worker` polls one declared path per station — a folder (worker-chisel `BK-DI0`) or a file (worker-alex `CAR0`, `M0`, `Y0`) — and triggers a run when that path is non-empty. It does not touch the bin-watcher.
 
@@ -97,10 +97,13 @@ Polling, not `fs.watch`: `fs.watch` is unreliable on macOS and in iCloud-synced 
 - [x] Bumped `@fob/lib-worker` to v0.35.0; restarted. Live check: a duplicate PDF, a zip holding a duplicate and a corrupt zip were handled within ~17 s — duplicates deleted, corrupt zip in `rejected/` — and the watcher went quiet once the inbox was empty. Enabling the cron also fired one catch-up run (the station had never run on schedule), which found the files still settling. **Not live-checked:** a two-document bundle's split parts coming back through intake — that needs new content, so it would run the LLM stations and write ledger rows; the watcher sees those parts exactly like any other dropped file
 - [x] `docs/lines/BK-DI.md` and `CLAUDE.md`: BK-DI0 is watch-triggered; rejects go to `rejected/`
 
-### Phase 3: worker-alex — CAR0, M0, Y0 ❌
-- [ ] Station JSONs: `watch_enabled: true`, `watch_path` = the inbox file; hourly cron → daily safety net (`schedule_cron: "0 0 * * *"`, `schedule_enabled` stays `true`); push
-- [ ] Bump `@fob/lib-worker`; restart; paste a URL into each inbox and confirm a run within ~10 s, the file is drained, and no further runs follow
-- [ ] Update worker-alex `CLAUDE.md` line descriptions (CAR0/M0/Y0 "hourly cron" → watch-triggered)
+### Phase 3: worker-alex — CAR0, M0, Y0 🔄
+- [x] Station JSONs: `watch_enabled: true`, `watch_path` = the inbox file (`{archive_root}/inbox.txt`, `{library_root}/input.txt`); hourly cron → daily safety net `0 0 * * *` (`schedule_enabled` stays `true`)
+- [x] Bumped `@fob/lib-worker` to v0.35.0 (crosses 0.34.0's breaking release): dropped the `splitBundlesStep` import from `src/index.js`; every conveyor config already passes the strict schema
+- [x] Boot dry-run against the v0.35.0 resolver: CAR0/M0/Y0 resolve to the intake watcher with their inbox files; conveyors bin-watched as before; the widened startup warning flags AV0, AV1, EM0, SV0–SV3 (EM0 is off on purpose pending a supervised first run)
+- [x] worker-alex `CLAUDE.md`: CAR0/M0/Y0 are intake-watched
+- [ ] **Deploy on the worker host.** worker-alex runs on `alex-pc` (Linux), not the Mac this was built on, so it couldn't be restarted or live-checked from here. On `alex-pc`: `git pull && npm install`, `fob-orc stations push CAR0 M0 Y0` (profile `alex2526`), restart the worker. The orchestrator still has the hourly crons — deliberately not pushed earlier, since the daily cron would have replaced the hourly one before the host ran the intake watcher. Check `watch_path`s exist there: they are macOS paths (`/Users/alex/Documents/...`); the watcher warns at boot if not
+- [ ] Live check on `alex-pc`: paste a URL into each inbox → a run within ~10 s, the file drained to 0 bytes, no further runs
 
 ## Out of Scope
 
